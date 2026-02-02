@@ -1,0 +1,3451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MT5 Multi-Account Monitor v3.7</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1800px; margin: 0 auto; }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .header-title h1 {
+            font-size: 26px;
+            font-weight: 700;
+        }
+        
+        .version-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .header-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-end;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .last-update {
+            font-size: 12px;
+            opacity: 0.95;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .update-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+        
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+            font-size: 12px;
+            padding: 6px 12px;
+        }
+        
+        /* Summary Cards */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .summary-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .summary-card-title {
+            font-size: 13px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .summary-card-icon { font-size: 22px; }
+        
+        .summary-card-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .summary-card-change {
+            font-size: 13px;
+            margin-top: 6px;
+        }
+        
+        .change-positive { color: #10b981; }
+        .change-negative { color: #ef4444; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+        }
+        
+        .tab.active {
+            color: #667eea;
+        }
+        
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #667eea;
+        }
+        
+        .tab:hover { color: #e2e8f0; }
+        
+        /* Content Sections */
+        .content-section {
+            display: none;
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        /* Account Cards */
+        .accounts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+        
+        .account-card {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .account-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        }
+        
+        .account-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .account-login {
+            font-size: 18px;
+            font-weight: 700;
+        }
+        
+        .account-status {
+            font-size: 20px;
+        }
+        
+        .autotrading-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .autotrading-active {
+            background-color: #10b981;
+        }
+        
+        .autotrading-inactive {
+            background-color: #ef4444;
+        }
+        
+        .account-vps {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+        
+        .account-metrics {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .metric {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        
+        .metric-value {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Stats Table */
+        .stats-table {
+            width: 100%;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .stats-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .stats-table th {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            text-align: left;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .stats-table td {
+            padding: 15px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            font-size: 14px;
+        }
+        
+        .stats-table tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 1400px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        
+        .close-modal {
+            font-size: 28px;
+            cursor: pointer;
+            color: #94a3b8;
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: #fff;
+        }
+        
+        /* Stat Boxes */
+        .stat-boxes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: 700;
+        }
+        
+        /* Protection Panel */
+        .protection-panel {
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .protection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .protection-limits {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .limit-item {
+            background: #1a202c;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .limit-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .limit-name {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        
+        .limit-value {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s;
+        }
+        
+        .progress-safe { background: #10b981; }
+        .progress-caution { background: #3b82f6; }
+        .progress-warning { background: #f59e0b; }
+        .progress-critical { background: #ef4444; }
+        
+        /* Alert */
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+        
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+        
+        /* Calendar */
+        .calendar-container {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            padding: 25px;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .calendar-nav {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .calendar-nav button {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .calendar-nav button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+        }
+        
+        .calendar-day-header {
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+            font-weight: 600;
+            padding: 10px;
+        }
+        
+        .calendar-day {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 90px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .calendar-day:hover {
+            background: rgba(255,255,255,0.08);
+            transform: scale(1.02);
+        }
+        
+        .calendar-day.profit {
+            border-color: rgba(16, 185, 129, 0.5);
+            background: rgba(16, 185, 129, 0.05);
+        }
+        
+        .calendar-day.loss {
+            border-color: rgba(239, 68, 68, 0.5);
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        .calendar-day-number {
+            font-weight: 600;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        
+        .calendar-day-profit {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .calendar-day-trades {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+        
+        /* Journal Styles */
+        .journal-filter {
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .journal-filter label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+        
+        .journal-filter select {
+            flex: 1;
+            max-width: 300px;
+            padding: 10px 15px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .journal-filter select option {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 10px;
+        }
+        
+        .journal-filter select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .evolution-chart {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 25px;
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .chart-canvas {
+            width: 100%;
+            height: 300px;
+        }
+        
+        .calendar-day-dd {
+            font-size: 10px;
+            color: #f59e0b;
+            margin-top: 4px;
+        }
+        
+        /* Sistemas Section */
+        .sistemas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 30px;
+            padding: 20px 0;
+        }
+        
+        .sistema-card {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            padding: 35px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid rgba(255,255,255,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .sistema-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .sistema-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            border-color: #667eea;
+        }
+        
+        .sistema-icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            display: block;
+        }
+        
+        .sistema-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #667eea;
+        }
+        
+        .sistema-description {
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        
+        .sistema-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .sistema-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Comparison */
+        .comparison-selector {
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .comparison-card {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid rgba(255,255,255,0.1);
+        }
+        
+        .rank-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 10px;
+        }
+        
+        .rank-1 { background: #ffd700; color: #1a202c; }
+        .rank-2 { background: #c0c0c0; color: #1a202c; }
+        .rank-3 { background: #cd7f32; color: white; }
+        
+        /* Discipline Score */
+        .discipline-score {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        
+        .score-value {
+            font-size: 48px;
+            font-weight: 700;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .accounts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-title">
+                <h1>📊 MT5 Multi-Account Monitor</h1>
+                <span class="version-badge">v3.7</span>
+            </div>
+            <div class="header-controls">
+                <div class="header-buttons">
+                    <button class="btn btn-primary" onclick="refreshData()">🔄 Actualizar</button>
+                    <button class="btn btn-secondary" onclick="openSettings()">⚙️ Configuración</button>
+                </div>
+                <div class="last-update">
+                    <span class="update-indicator"></span>
+                    <span id="lastUpdateTime">Nunca</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="summary-grid">
+            <div class="summary-card">
+                <div class="summary-card-header">
+                    <span class="summary-card-title">Total Cuentas</span>
+                    <span class="summary-card-icon">👥</span>
+                </div>
+                <div class="summary-card-value" id="totalAccounts">0</div>
+                <div class="summary-card-change">
+                    <span id="activeAccounts">0</span> activas
+                </div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-card-header">
+                    <span class="summary-card-title">Balance Total</span>
+                    <span class="summary-card-icon">💰</span>
+                </div>
+                <div class="summary-card-value" id="totalBalance">$0.00</div>
+                <div class="summary-card-change">
+                    <span id="totalBalanceChange">+0.00%</span>
+                </div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-card-header">
+                    <span class="summary-card-title">Equity Total</span>
+                    <span class="summary-card-icon">📈</span>
+                </div>
+                <div class="summary-card-value" id="totalEquity">$0.00</div>
+                <div class="summary-card-change">
+                    <span id="totalProfit">+$0.00</span>
+                </div>
+            </div>
+            
+            <div class="summary-card">
+                <div class="summary-card-header">
+                    <span class="summary-card-title">Trades Abiertos</span>
+                    <span class="summary-card-icon">📊</span>
+                </div>
+                <div class="summary-card-value" id="totalOpenTrades">0</div>
+                <div class="summary-card-change">
+                    <span id="totalVolume">0.00 lots</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel de Emergencia Global -->
+        <div id="emergencyGlobalPanel" style="display: none; margin-bottom: 24px;">
+            <div style="background: linear-gradient(135deg, #2d1f1f 0%, #1a1414 100%); border: 1px solid rgba(239,68,68,0.35); border-radius: 12px; padding: 18px 22px; box-shadow: 0 4px 15px rgba(0,0,0,0.25);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 18px;">🚨</span>
+                        <span style="font-size: 14px; font-weight: 700; color: #ef4444; text-transform: uppercase; letter-spacing: 0.8px;">Emergencia Global</span>
+                    </div>
+                    <span id="emergencyGlobalScope" style="font-size: 12px; color: #94a3b8;"></span>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-danger" style="padding: 8px 16px; font-size: 13px;" onclick="confirmGlobalCloseAll()">
+                        🛑 Cerrar Todos los Trades
+                    </button>
+                    <button class="btn btn-warning" style="padding: 8px 16px; font-size: 13px;" onclick="confirmGlobalPauseEA()">
+                        ⏸️ Pausar EA
+                    </button>
+                    <button class="btn btn-success" style="padding: 8px 16px; font-size: 13px;" onclick="confirmGlobalResumeEA()">
+                        ▶️ Reanudar EA
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard en vivo</button>
+            <button class="tab" onclick="switchTab('statistics')">📈 Estadísticas</button>
+            <button class="tab" onclick="switchTab('journal')">📝 Journal</button>
+            <button class="tab" onclick="switchTab('sistemas')">🚀 Sistemas</button>
+            <button class="tab" onclick="switchTab('compare')">⚖️ Comparar</button>
+            <button class="tab" onclick="switchTab('vps')">🖥️ Vista VPS</button>
+            <button class="tab" onclick="switchTab('ai')">🤖 Motor IA</button>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="content-section active">
+            <div class="accounts-grid" id="accountsGrid">
+                <!-- Account cards will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div id="statistics" class="content-section">
+            <div class="stats-table">
+                <table id="statsTable">
+                    <thead>
+                        <tr>
+                            <th>Cuenta</th>
+                            <th>Win Rate</th>
+                            <th>Profit Factor</th>
+                            <th>Max DD</th>
+                            <th>Expectancy</th>
+                            <th>Sharpe Ratio</th>
+                            <th>Recovery Factor</th>
+                            <th>Avg RRR</th>
+                            <th>Total Trades</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Stats will be inserted here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Journal Section -->
+        <div id="journal" class="content-section">
+            <div id="journalContent">
+                <!-- Journal will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Sistemas Section -->
+        <div id="sistemas" class="content-section">
+            <div id="sistemasContent">
+                <!-- Sistemas will be inserted here -->
+            </div>
+        </div>
+
+        <!-- Compare Section -->
+        <div id="compare" class="content-section">
+            <div class="comparison-selector">
+                <h3 style="margin-bottom: 15px;">Selecciona cuentas para comparar</h3>
+                <div id="comparisonSelector"></div>
+            </div>
+            <div class="comparison-grid" id="comparisonGrid"></div>
+        </div>
+
+        <!-- VPS View Section -->
+        <div id="vps" class="content-section">
+            <div id="vpsView"></div>
+        </div>
+
+        <!-- AI Motor Section -->
+        <div id="ai" class="content-section">
+            <div id="aiMotorContent"></div>
+        </div>
+    </div>
+
+    <!-- Account Details Modal -->
+    <div id="accountModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalAccountTitle">Cuenta</h2>
+                <span class="close-modal" onclick="closeAccountModal()">×</span>
+            </div>
+            <div id="modalAccountContent">
+                <!-- Account details will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>⚙️ Configuración</h2>
+                <span class="close-modal" onclick="closeSettings()">×</span>
+            </div>
+            <div style="padding: 20px;">
+                <h3 style="margin-bottom: 15px;">🖥️ Servidores VPS</h3>
+                <div id="vpsServersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="confirmTitle">Confirmar Acción</h2>
+                <span class="close-modal" onclick="closeConfirm()">×</span>
+            </div>
+            <div style="padding: 20px;">
+                <p id="confirmMessage" style="margin-bottom: 20px; line-height: 1.6;"></p>
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button class="btn btn-secondary" onclick="closeConfirm()">Cancelar</button>
+                    <button class="btn btn-danger" onclick="executeConfirmedAction()">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let vpsServers = [];
+        let allAccountsData = [];
+        let refreshIntervalId = null;
+        let isRefreshing = false; // Flag para prevenir llamadas concurrentes
+        let pendingCommand = null;
+        let selectedCompareAccounts = [];
+        
+        // Variables para Journal y Calendar
+        let journalData = {}; // {login: {closed_trades: [], total_count: 0}}
+        let historicalSnapshots = []; // Array con snapshots históricos
+        let currentAnalysisData = null; // Datos del análisis actual
+        const BACKEND_URL = 'http://localhost:5001'; // Backend Python
+        let calendarData = {}; // {login: {daily_stats: []}}
+
+        // Load VPS servers from localStorage
+        function loadVPSServers() {
+            const saved = localStorage.getItem('vpsServers');
+            if (saved) {
+                vpsServers = JSON.parse(saved);
+            } else {
+                // Default example
+                vpsServers = [
+                    { name: 'VPS-1', ip: 'localhost', port: 8080 }
+                ];
+                saveVPSServers();
+            }
+            renderVPSServersList();
+        }
+
+        function saveVPSServers() {
+            localStorage.setItem('vpsServers', JSON.stringify(vpsServers));
+        }
+
+        function renderVPSServersList() {
+            const list = document.getElementById('vpsServersList');
+            list.innerHTML = '';
+            
+            vpsServers.forEach((vps, index) => {
+                const div = document.createElement('div');
+                div.style.cssText = 'display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding: 20px; background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);';
+                div.innerHTML = `
+                    <div style="flex: 1;">
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 6px; color: #e2e8f0;">${vps.name}</div>
+                        <div style="font-size: 13px; color: #94a3b8; font-family: monospace;">${vps.ip}:${vps.port}</div>
+                    </div>
+                    <button class="btn btn-danger" onclick="removeVPS(${index})" style="padding: 8px 16px;">
+                        🗑️ Eliminar
+                    </button>
+                `;
+                list.appendChild(div);
+            });
+            
+            // Add new VPS form
+            const addForm = document.createElement('div');
+            addForm.style.cssText = 'margin-top: 25px; padding: 25px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 2px dashed rgba(102, 126, 234, 0.3);';
+            addForm.innerHTML = `
+                <h3 style="color: #8b9bea; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 20px;">➕</span> Agregar Nuevo VPS
+                </h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #94a3b8; font-weight: 600;">Nombre del VPS</label>
+                    <input type="text" id="newVPSName" placeholder="Ej: VPS-1" 
+                           style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #94a3b8; font-weight: 600;">IP del VPS</label>
+                    <input type="text" id="newVPSIP" placeholder="Ej: 192.168.1.100" 
+                           style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: 8px; font-size: 14px;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-size: 13px; color: #94a3b8; font-weight: 600;">Puerto</label>
+                    <input type="number" id="newVPSPort" placeholder="8001" value="8001"
+                           style="width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); color: white; border-radius: 8px; font-size: 14px;">
+                </div>
+                <button class="btn btn-primary" onclick="addVPSServerFromForm()" style="width: 100%; padding: 12px; font-size: 14px;">
+                    ➕ Agregar VPS
+                </button>
+            `;
+            list.appendChild(addForm);
+        }
+
+        function addVPSServerFromForm() {
+            const name = document.getElementById('newVPSName').value.trim();
+            const ip = document.getElementById('newVPSIP').value.trim();
+            const port = parseInt(document.getElementById('newVPSPort').value);
+            
+            if (!name || !ip || !port) {
+                alert('⚠️ Por favor completa todos los campos');
+                return;
+            }
+            
+            vpsServers.push({ name, ip, port });
+            saveVPSServers();
+            renderVPSServersList();
+            
+            // Clear form
+            document.getElementById('newVPSName').value = '';
+            document.getElementById('newVPSIP').value = '';
+            document.getElementById('newVPSPort').value = '8001';
+        }
+
+        function updateVPS(index, field, value) {
+            vpsServers[index][field] = field === 'port' ? parseInt(value) : value;
+            saveVPSServers();
+        }
+
+        function removeVPS(index) {
+            if (confirm('¿Eliminar este servidor VPS?')) {
+                vpsServers.splice(index, 1);
+                saveVPSServers();
+                renderVPSServersList();
+            }
+        }
+
+        // Fetch data from all VPS servers
+        async function refreshData() {
+            // Prevenir ejecuciones concurrentes
+            if (isRefreshing) {
+                return;
+            }
+            
+            isRefreshing = true;
+            allAccountsData = [];
+            
+            for (const vps of vpsServers) {
+                try {
+                    const response = await fetch(`http://${vps.ip}:${vps.port}/api/accounts`, {
+                        mode: 'cors',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        
+                        if (data.accounts && Array.isArray(data.accounts)) {
+                            data.accounts.forEach(account => {
+                                allAccountsData.push({
+                                    ...account,
+                                    vps_name: vps.name,
+                                    vps_ip: vps.ip,
+                                    vps_port: vps.port
+                                });
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error(`Error fetching from ${vps.name}:`, error);
+                }
+            }
+            
+            // Cargar datos de journal y calendar para todas las cuentas
+            await loadJournalAndCalendarData();
+            
+            updateDashboard();
+            updateStatistics();
+            refreshJournalData();
+            updateSistemas();
+            updateComparisonSelector();
+            updateVPSView();
+            updateAIMotor();
+            
+            document.getElementById('lastUpdateTime').textContent = new Date().toLocaleTimeString();
+            
+            isRefreshing = false; // Liberar el flag
+        }
+        
+        // Cargar datos de journal y calendar desde la API
+        async function loadJournalAndCalendarData() {
+            for (const acc of allAccountsData) {
+                const login = acc.account?.login;
+                if (!login) continue;
+                
+                const vpsIp = acc.vps_ip;
+                const vpsPort = acc.vps_port;
+                
+                try {
+                    // Cargar journal
+                    const journalResponse = await fetch(`http://${vpsIp}:${vpsPort}/api/journal/${login}`, {
+                        mode: 'cors',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
+                    if (journalResponse.ok) {
+                        journalData[login] = await journalResponse.json();
+                    }
+                } catch (error) {
+                    console.error(`Error loading journal for ${login}:`, error);
+                }
+                
+                try {
+                    // Cargar calendar
+                    const calendarResponse = await fetch(`http://${vpsIp}:${vpsPort}/api/calendar/${login}`, {
+                        mode: 'cors',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    
+                    if (calendarResponse.ok) {
+                        calendarData[login] = await calendarResponse.json();
+                    }
+                } catch (error) {
+                    console.error(`Error loading calendar for ${login}:`, error);
+                }
+            }
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            // Summary
+            let totalBalance = 0;
+            let totalEquity = 0;
+            let totalProfit = 0;
+            let totalOpenTrades = 0;
+            let totalVolume = 0;
+            
+            allAccountsData.forEach(acc => {
+                const account = acc.account || {};
+                totalBalance += account.balance || 0;
+                totalEquity += account.equity || 0;
+                totalProfit += account.profit || 0;
+                totalOpenTrades += (acc.open_trades || []).length;
+                
+                (acc.open_trades || []).forEach(trade => {
+                    totalVolume += trade.volume || 0;
+                });
+            });
+            
+            document.getElementById('totalAccounts').textContent = allAccountsData.length;
+            document.getElementById('activeAccounts').textContent = allAccountsData.length;
+            document.getElementById('totalBalance').textContent = '$' + totalBalance.toFixed(2);
+            document.getElementById('totalEquity').textContent = '$' + totalEquity.toFixed(2);
+            document.getElementById('totalProfit').textContent = (totalProfit >= 0 ? '+' : '') + '$' + totalProfit.toFixed(2);
+            document.getElementById('totalOpenTrades').textContent = totalOpenTrades;
+            document.getElementById('totalVolume').textContent = totalVolume.toFixed(2) + ' lots';
+            
+            // Account cards
+            const grid = document.getElementById('accountsGrid');
+            grid.innerHTML = '';
+            
+            allAccountsData.forEach(acc => {
+                const account = acc.account || {};
+                const stats = acc.stats || {};
+                const card = document.createElement('div');
+                card.className = 'account-card';
+                card.onclick = () => openAccountModal(acc);
+                
+                const equity = account.equity || 0;
+                const balance = account.balance || 0;
+                const profit = account.profit || 0;
+                const profitClass = profit >= 0 ? 'change-positive' : 'change-negative';
+                const profitSymbol = profit >= 0 ? '+' : '';
+                
+                // Calculate drawdown based on balance (not equity)
+                const currentDrawdown = (profit < 0 && balance > 0) ? Math.abs((profit / balance) * 100) : 0;
+                
+                // Determinar estado de AutoTrading
+                const autoTradingEnabled = acc.ea_status?.auto_trading ?? true; // Default true si no existe
+                const autoTradingClass = autoTradingEnabled ? 'autotrading-active' : 'autotrading-inactive';
+                
+                card.innerHTML = `
+                    <div class="account-header">
+                        <div class="account-login">#${account.login || 'N/A'}</div>
+                        <div class="account-status">
+                            <span class="autotrading-indicator ${autoTradingClass}"></span>${acc.ea_status?.paused ? '⏸️' : '▶️'}
+                        </div>
+                    </div>
+                    <div class="account-vps">🖥️ ${acc.vps_name || 'Unknown VPS'}</div>
+                    <div class="account-metrics">
+                        <div class="metric">
+                            <div class="metric-label">Balance</div>
+                            <div class="metric-value">$${balance.toFixed(2)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Equity</div>
+                            <div class="metric-value">$${equity.toFixed(2)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Profit/Loss</div>
+                            <div class="metric-value ${profitClass}">${profitSymbol}$${profit.toFixed(2)}</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-label">Drawdown</div>
+                            <div class="metric-value" style="color: #f59e0b">${currentDrawdown.toFixed(2)}%</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 12px; display: flex; gap: 8px; font-size: 12px;">
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #94a3b8;">Win Rate</div>
+                            <div style="font-weight: 600;">${(stats.win_rate || 0).toFixed(1)}%</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #94a3b8;">Trades</div>
+                            <div style="font-weight: 600;">${stats.total_trades || 0}</div>
+                        </div>
+                        <div style="flex: 1; text-align: center;">
+                            <div style="color: #94a3b8;">Open</div>
+                            <div style="font-weight: 600;">${(acc.open_trades || []).length}</div>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            if (allAccountsData.length === 0) {
+                grid.innerHTML = '<div class="alert alert-info">No hay cuentas conectadas. Agrega servidores VPS en Configuración.</div>';
+            }
+            
+            // Actualizar panel de emergencia global
+            updateEmergencyPanel();
+        }
+
+        // Update statistics table
+        function updateStatistics() {
+            const tbody = document.getElementById('statsTable').querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            allAccountsData.forEach(acc => {
+                const account = acc.account || {};
+                const stats = acc.stats || {};
+                const advStats = acc.advanced_stats || {};
+                
+                const row = document.createElement('tr');
+                row.style.cursor = 'pointer';
+                row.onclick = () => openAccountModal(acc);
+                
+                row.innerHTML = `
+                    <td><strong>#${account.login || 'N/A'}</strong><br><small style="color: #94a3b8;">${acc.vps_name}</small></td>
+                    <td style="color: ${stats.win_rate >= 60 ? '#10b981' : stats.win_rate >= 50 ? '#f59e0b' : '#ef4444'}">${(stats.win_rate || 0).toFixed(2)}%</td>
+                    <td style="color: ${stats.profit_factor >= 2 ? '#10b981' : stats.profit_factor >= 1 ? '#f59e0b' : '#ef4444'}">${(stats.profit_factor || 0).toFixed(2)}</td>
+                    <td style="color: ${stats.max_dd <= 5 ? '#10b981' : stats.max_dd <= 10 ? '#f59e0b' : '#ef4444'}">${(stats.max_dd || 0).toFixed(2)}%</td>
+                    <td>$${(advStats.expectancy || 0).toFixed(2)}</td>
+                    <td>${(advStats.sharpe_ratio || 0).toFixed(2)}</td>
+                    <td>${(advStats.recovery_factor || 0).toFixed(2)}</td>
+                    <td>${(advStats.avg_rrr || 0).toFixed(2)}</td>
+                    <td>${stats.total_trades || 0}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update calendar
+        let journalInitialized = false;
+        
+        function updateJournal() {
+            // Solo inicializar el journal una vez
+            if (journalInitialized) {
+                return;
+            }
+            
+            const content = document.getElementById('journalContent');
+            
+            // Create filter
+            let filterHTML = `
+                <div class="journal-filter">
+                    <label for="journalAccountFilter">📊 Seleccionar Cuenta:</label>
+                    <select id="journalAccountFilter" onchange="renderJournalCalendar()">
+                        <option value="all">Todas las Cuentas</option>
+            `;
+            
+            allAccountsData.forEach((acc, index) => {
+                const account = acc.account || {};
+                filterHTML += `<option value="${index}">Cuenta #${account.login} - ${acc.vps_name}</option>`;
+            });
+            
+            filterHTML += `
+                    </select>
+                </div>
+            `;
+            
+            content.innerHTML = filterHTML + `
+                <div id="journalSummary" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 25px;">
+                    <!-- Summary cards will be inserted here -->
+                </div>
+                <div class="calendar-container">
+                    <div class="calendar-header">
+                        <h2>📝 Calendario de Trading</h2>
+                        <div class="calendar-nav">
+                            <button onclick="changeJournalMonth(-1)">◀ Anterior</button>
+                            <span id="journalMonth" style="font-weight: 700; font-size: 18px;"></span>
+                            <button onclick="changeJournalMonth(1)">Siguiente ▶</button>
+                        </div>
+                    </div>
+                    <div id="journalCalendarGrid"></div>
+                </div>
+                <div class="evolution-chart">
+                    <h3 class="chart-title">📈 Curva de Evolución</h3>
+                    <canvas id="evolutionChart" class="chart-canvas"></canvas>
+                </div>
+            `;
+            
+            journalInitialized = true;
+            renderJournalCalendar();
+        }
+        
+        function refreshJournalData() {
+            // Esta función actualiza solo el filtro con las cuentas actuales sin reiniciar todo
+            if (!journalInitialized) {
+                return;
+            }
+            
+            const select = document.getElementById('journalAccountFilter');
+            if (!select) return;
+            
+            const currentValue = select.value;
+            
+            // Recrear solo las opciones del select
+            let optionsHTML = '<option value="all">Todas las Cuentas</option>';
+            allAccountsData.forEach((acc, index) => {
+                const account = acc.account || {};
+                optionsHTML += `<option value="${index}">Cuenta #${account.login} - ${acc.vps_name}</option>`;
+            });
+            
+            select.innerHTML = optionsHTML;
+            select.value = currentValue;
+        }
+        
+        let currentJournalMonth = new Date();
+        
+        function updateJournalSummary(accountsToShow) {
+            const summaryDiv = document.getElementById('journalSummary');
+            if (!summaryDiv) return;
+            
+            let totalBalance = 0;
+            let totalAccumulatedProfit = 0;
+            let totalEquity = 0;
+            let totalInitialBalance = 0;
+            
+            accountsToShow.forEach(acc => {
+                const account = acc.account || {};
+                const stats = acc.stats || {};
+                const balance = account.balance || 0;
+                
+                // Intentar obtener el balance inicial de diferentes fuentes
+                let initialBalance = account.initial_balance || account.start_balance || account.deposit;
+                
+                // Si no hay balance inicial en el API, intentar calcularlo usando estadísticas
+                if (!initialBalance || initialBalance === balance) {
+                    // Usar el profit histórico total si está disponible
+                    const historicalProfit = stats.total_profit || stats.net_profit || 0;
+                    initialBalance = balance - historicalProfit;
+                    
+                    // Si aún es cero o negativo, usar el balance actual como último recurso
+                    if (initialBalance <= 0) {
+                        initialBalance = balance;
+                    }
+                }
+                
+                totalBalance += balance;
+                totalEquity += account.equity || 0;
+                totalInitialBalance += initialBalance;
+                
+                // Calcular ganancia/pérdida acumulada: balance actual - balance inicial
+                const accumulatedProfit = balance - initialBalance;
+                totalAccumulatedProfit += accumulatedProfit;
+            });
+            
+            // Calcular el porcentaje sobre el balance inicial total
+            const profitPercentage = totalInitialBalance > 0 
+                ? (totalAccumulatedProfit / totalInitialBalance) * 100 
+                : 0;
+            
+            summaryDiv.innerHTML = `
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <span class="summary-card-title">Balance Total</span>
+                        <span class="summary-card-icon">💰</span>
+                    </div>
+                    <div class="summary-card-value">$${totalBalance.toFixed(2)}</div>
+                    <div class="summary-card-change" style="color: #94a3b8;">
+                        Equity: $${totalEquity.toFixed(2)}
+                    </div>
+                </div>
+                
+                <div class="summary-card">
+                    <div class="summary-card-header">
+                        <span class="summary-card-title">Profit/Loss Acumulado</span>
+                        <span class="summary-card-icon">📈</span>
+                    </div>
+                    <div class="summary-card-value ${totalAccumulatedProfit >= 0 ? 'change-positive' : 'change-negative'}">
+                        ${totalAccumulatedProfit >= 0 ? '+' : ''}$${totalAccumulatedProfit.toFixed(2)}
+                    </div>
+                    <div class="summary-card-change ${totalAccumulatedProfit >= 0 ? 'change-positive' : 'change-negative'}">
+                        ${totalAccumulatedProfit >= 0 ? '▲' : '▼'} ${profitPercentage.toFixed(2)}%
+                    </div>
+                </div>
+            `;
+        }
+        
+        function changeJournalMonth(delta) {
+            currentJournalMonth.setMonth(currentJournalMonth.getMonth() + delta);
+            renderJournalCalendar();
+        }
+        
+        function renderJournalCalendar() {
+            const month = currentJournalMonth.getMonth();
+            const year = currentJournalMonth.getFullYear();
+            
+            document.getElementById('journalMonth').textContent = 
+                new Date(year, month, 1).toLocaleDateString('es', { month: 'long', year: 'numeric' });
+            
+            const grid = document.getElementById('journalCalendarGrid');
+            grid.style.display = 'grid';
+            grid.style.gridTemplateColumns = 'repeat(7, 1fr)';
+            grid.style.gap = '10px';
+            grid.innerHTML = '';
+            
+            // Day headers
+            const dayNames = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+            dayNames.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'calendar-day-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            // Get selected account filter
+            const filterValue = document.getElementById('journalAccountFilter').value;
+            
+            // Get account data for selected filter
+            let accountsToShow = [];
+            if (filterValue === 'all') {
+                accountsToShow = allAccountsData;
+            } else {
+                const index = parseInt(filterValue);
+                if (index >= 0 && index < allAccountsData.length) {
+                    accountsToShow = [allAccountsData[index]];
+                }
+            }
+            
+            // Update summary cards
+            updateJournalSummary(accountsToShow);
+            
+            // Calculate daily data (simplified - would need actual history data from API)
+            const firstDay = new Date(year, month, 1);
+            let startingDayOfWeek = firstDay.getDay() - 1;
+            if (startingDayOfWeek < 0) startingDayOfWeek = 6;
+            
+            // Empty cells before first day
+            for (let i = 0; i < startingDayOfWeek; i++) {
+                const empty = document.createElement('div');
+                grid.appendChild(empty);
+            }
+            
+            // Days of month
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const today = new Date();
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayDiv = document.createElement('div');
+                dayDiv.className = 'calendar-day';
+                
+                // Simulated data - in real scenario, this would come from historical data
+                const currentDate = new Date(year, month, day);
+                const isToday = currentDate.toDateString() === today.toDateString();
+                const isFuture = currentDate > today;
+                
+                let dailyProfit = 0;
+                let dailyTrades = 0;
+                let maxDD = 0;
+                
+                // Usar datos reales del calendar
+                if (!isFuture) {
+                    // Formatear la fecha actual para buscar en los datos del calendario
+                    const dateStr = currentDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+                    
+                    accountsToShow.forEach(acc => {
+                        const login = acc.account?.login;
+                        if (!login) return;
+                        
+                        // Obtener datos del calendario para esta cuenta
+                        const accountCalendar = calendarData[login];
+                        if (accountCalendar && accountCalendar.daily_stats) {
+                            // Buscar estadísticas para este día específico
+                            const dayStats = accountCalendar.daily_stats.find(stat => {
+                                // Comparar fechas (pueden venir en formato "YYYY.MM.DD" o "YYYY-MM-DD")
+                                const statDate = stat.date.replace(/\./g, '-');
+                                return statDate === dateStr;
+                            });
+                            
+                            if (dayStats) {
+                                dailyProfit += dayStats.profit || 0;
+                                dailyTrades += dayStats.trades || 0;
+                                maxDD += dayStats.max_dd || 0;
+                            }
+                        }
+                    });
+                    
+                    // Si no hay cuentas seleccionadas, mostrar datos neutros
+                    if (accountsToShow.length === 0) {
+                        dailyProfit = 0;
+                        dailyTrades = 0;
+                        maxDD = 0;
+                    }
+                }
+                
+                if (dailyProfit > 0) dayDiv.classList.add('profit');
+                if (dailyProfit < 0) dayDiv.classList.add('loss');
+                if (isToday) dayDiv.style.border = '2px solid #667eea';
+                
+                dayDiv.innerHTML = `
+                    <div class="calendar-day-number">${day}</div>
+                    ${!isFuture ? `
+                        <div class="calendar-day-profit ${dailyProfit >= 0 ? 'change-positive' : 'change-negative'}">
+                            ${dailyProfit !== 0 ? (dailyProfit >= 0 ? '+' : '') + '$' + dailyProfit.toFixed(2) : '—'}
+                        </div>
+                        <div class="calendar-day-trades">Trades: ${dailyTrades}</div>
+                        <div class="calendar-day-dd">DD: ${maxDD.toFixed(2)}%</div>
+                    ` : '<div style="text-align: center; color: #475569; padding-top: 20px;">—</div>'}
+                `;
+                
+                grid.appendChild(dayDiv);
+            }
+            
+            // Update evolution chart
+            renderEvolutionChart(accountsToShow);
+        }
+        
+        function renderEvolutionChart(accountsToShow) {
+            const canvas = document.getElementById('evolutionChart');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = canvas.offsetWidth;
+            canvas.height = 300;
+            
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Build real data points from calendar data
+            const dataPoints = [];
+            const dateLabels = [];
+            
+            // Get all unique dates from calendar data
+            const allDates = new Set();
+            accountsToShow.forEach(acc => {
+                const login = acc.account?.login;
+                if (!login) return;
+                
+                const accountCalendar = calendarData[login];
+                if (accountCalendar && accountCalendar.daily_stats) {
+                    accountCalendar.daily_stats.forEach(stat => {
+                        const dateStr = stat.date.replace(/\./g, '-');
+                        allDates.add(dateStr);
+                    });
+                }
+            });
+            
+            // Sort dates
+            const sortedDates = Array.from(allDates).sort();
+            
+            // If no data, show empty chart
+            if (sortedDates.length === 0) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('No hay datos disponibles', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            // Calculate cumulative balance for each date
+            let cumulativeBalance = 0;
+            
+            // Get initial balance (subtract total profit from current balance)
+            accountsToShow.forEach(acc => {
+                const account = acc.account || {};
+                const stats = acc.stats || {};
+                const balance = account.balance || 0;
+                const totalProfit = stats.total_profit || 0;
+                cumulativeBalance += (balance - totalProfit);
+            });
+            
+            const initialBalance = cumulativeBalance;
+            
+            // Build data points with cumulative profit
+            sortedDates.forEach(dateStr => {
+                let dailyProfit = 0;
+                
+                accountsToShow.forEach(acc => {
+                    const login = acc.account?.login;
+                    if (!login) return;
+                    
+                    const accountCalendar = calendarData[login];
+                    if (accountCalendar && accountCalendar.daily_stats) {
+                        const dayStats = accountCalendar.daily_stats.find(stat => {
+                            const statDate = stat.date.replace(/\./g, '-');
+                            return statDate === dateStr;
+                        });
+                        
+                        if (dayStats) {
+                            dailyProfit += dayStats.profit || 0;
+                        }
+                    }
+                });
+                
+                cumulativeBalance += dailyProfit;
+                dataPoints.push(cumulativeBalance);
+                
+                // Format date label (only day)
+                const dateParts = dateStr.split('-');
+                dateLabels.push(dateParts[2] || ''); // Day
+            });
+            
+            // If we have less than 2 points, don't draw
+            if (dataPoints.length < 2) {
+                ctx.fillStyle = '#94a3b8';
+                ctx.font = '14px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('Datos insuficientes para mostrar la curva', canvas.width / 2, canvas.height / 2);
+                return;
+            }
+            
+            // Draw grid lines
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 5; i++) {
+                const y = (canvas.height - 40) * (i / 5) + 20;
+                ctx.beginPath();
+                ctx.moveTo(40, y);
+                ctx.lineTo(canvas.width - 20, y);
+                ctx.stroke();
+            }
+            
+            // Calculate min and max for scaling with 2% padding
+            const minValue = Math.min(...dataPoints);
+            const maxValue = Math.max(...dataPoints);
+            const valueRange = maxValue - minValue || 1; // Avoid division by zero
+            const padding_pct = valueRange * 0.02; // 2% padding
+            const adjustedMin = minValue - padding_pct;
+            const adjustedMax = maxValue + padding_pct;
+            const range = adjustedMax - adjustedMin;
+            
+            // Draw Y-axis labels
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'right';
+            for (let i = 0; i <= 5; i++) {
+                const value = adjustedMax - (range * (i / 5));
+                const y = (canvas.height - 40) * (i / 5) + 25;
+                ctx.fillText('$' + value.toFixed(0), 35, y);
+            }
+            
+            // Draw line chart
+            const padding = 40;
+            const chartWidth = canvas.width - padding - 20;
+            const chartHeight = canvas.height - 40;
+            const stepX = chartWidth / (dataPoints.length - 1);
+            
+            ctx.strokeStyle = '#667eea';
+            ctx.lineWidth = 3;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            
+            ctx.beginPath();
+            dataPoints.forEach((value, index) => {
+                const x = padding + (index * stepX);
+                const normalizedValue = (value - adjustedMin) / range;
+                const y = chartHeight - (normalizedValue * (chartHeight - 20)) + 20;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
+            
+            // Draw dots on line
+            ctx.fillStyle = '#667eea';
+            dataPoints.forEach((value, index) => {
+                const x = padding + (index * stepX);
+                const normalizedValue = (value - adjustedMin) / range;
+                const y = chartHeight - (normalizedValue * (chartHeight - 20)) + 20;
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Draw X-axis labels (dates)
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+            ctx.textAlign = 'center';
+            const labelStep = Math.max(1, Math.floor(dateLabels.length / 7));
+            dateLabels.forEach((label, index) => {
+                if (index % labelStep === 0 || index === dateLabels.length - 1) {
+                    const x = padding + (index * stepX);
+                    ctx.fillText(label, x, canvas.height - 5);
+                }
+            });
+        }
+        
+        // Update Sistemas
+        function updateSistemas() {
+            const content = document.getElementById('sistemasContent');
+            
+            content.innerHTML = `
+                <div class="sistemas-grid">
+                    <div class="sistema-card" onclick="openSistema('optimizer')">
+                        <span class="sistema-icon">🏆</span>
+                        <h3 class="sistema-title">MT5 Optimizer Pro</h3>
+                        <p class="sistema-description">
+                            Analiza resultados de optimización de MT5, ranking inteligente con filtros avanzados y comparación de presets
+                        </p>
+                        <button class="sistema-button">
+                            🚀 Abrir Sistema
+                        </button>
+                    </div>
+                    
+                    <div class="sistema-card" onclick="openSistema('analyzer')">
+                        <span class="sistema-icon">📊</span>
+                        <h3 class="sistema-title">MT5 Deep Analyzer</h3>
+                        <p class="sistema-description">
+                            Análisis profundo de backtesting individual con estadísticas avanzadas y métricas detalladas
+                        </p>
+                        <button class="sistema-button">
+                            🚀 Abrir Sistema
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function openSistema(type) {
+            let filename = '';
+            let title = '';
+            
+            if (type === 'optimizer') {
+                filename = 'file:///C:/Users/PC/Documents/MT5-Monitor/mt5-optimizer-pro-v4.2.html';
+                title = 'MT5 Optimizer Pro';
+            } else if (type === 'analyzer') {
+                filename = 'file:///C:/Users/PC/Documents/MT5-Monitor/mt5-deep-analyzer-v1_5.html';
+                title = 'MT5 Deep Analyzer';
+            }
+            
+            // Método mejorado que evita bloqueos de popup
+            try {
+                const link = document.createElement('a');
+                link.href = filename;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                
+                // Simular click del usuario (los navegadores no bloquean esto)
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            } catch (error) {
+                alert('⚠️ Error al abrir el sistema: ' + error.message + '\n\nAsegúrate de tener los archivos HTML en la siguiente ubicación:\n   C:\\Users\\PC\\Documents\\MT5-Monitor\\\n\n   • mt5-monitor-v3_3.html\n   • mt5-optimizer-pro-v4.2.html\n   • mt5-deep-analyzer-v1_5.html');
+            }
+        }
+
+        // Update comparison selector
+        function updateComparisonSelector() {
+            const selector = document.getElementById('comparisonSelector');
+            selector.innerHTML = '';
+            
+            allAccountsData.forEach((acc, index) => {
+                const account = acc.account || {};
+                const checkbox = document.createElement('label');
+                checkbox.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; margin-right: 20px; cursor: pointer;';
+                checkbox.innerHTML = `
+                    <input type="checkbox" onchange="toggleCompareAccount(${index})" 
+                           ${selectedCompareAccounts.includes(index) ? 'checked' : ''}
+                           style="width: 18px; height: 18px; cursor: pointer;">
+                    <span>Cuenta #${account.login} (${acc.vps_name})</span>
+                `;
+                selector.appendChild(checkbox);
+            });
+            
+            updateComparison();
+        }
+
+        function toggleCompareAccount(index) {
+            const idx = selectedCompareAccounts.indexOf(index);
+            if (idx >= 0) {
+                selectedCompareAccounts.splice(idx, 1);
+            } else {
+                if (selectedCompareAccounts.length < 3) {
+                    selectedCompareAccounts.push(index);
+                } else {
+                    alert('Máximo 3 cuentas para comparar');
+                    return;
+                }
+            }
+            updateComparison();
+        }
+
+        function updateComparison() {
+            const grid = document.getElementById('comparisonGrid');
+            grid.innerHTML = '';
+            
+            selectedCompareAccounts.forEach((index, rank) => {
+                const acc = allAccountsData[index];
+                if (!acc) return;
+                
+                const account = acc.account || {};
+                const stats = acc.stats || {};
+                const advStats = acc.advanced_stats || {};
+                
+                const card = document.createElement('div');
+                card.className = 'comparison-card';
+                
+                const rankClass = rank === 0 ? 'rank-1' : rank === 1 ? 'rank-2' : 'rank-3';
+                const rankEmoji = rank === 0 ? '🥇' : rank === 1 ? '🥈' : '🥉';
+                
+                card.innerHTML = `
+                    <h3>
+                        Cuenta #${account.login}
+                        <span class="rank-badge ${rankClass}">${rankEmoji} #${rank + 1}</span>
+                    </h3>
+                    <div class="stat-boxes">
+                        <div class="stat-box">
+                            <div class="stat-label">Balance</div>
+                            <div class="stat-value">$${(account.balance || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Profit</div>
+                            <div class="stat-value ${(account.profit || 0) >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${(account.profit || 0) >= 0 ? '+' : ''}$${(account.profit || 0).toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Win Rate</div>
+                            <div class="stat-value">${(stats.win_rate || 0).toFixed(2)}%</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Profit Factor</div>
+                            <div class="stat-value">${(stats.profit_factor || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Max DD</div>
+                            <div class="stat-value">${(stats.max_dd || 0).toFixed(2)}%</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Trades</div>
+                            <div class="stat-value">${stats.total_trades || 0}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Expectancy</div>
+                            <div class="stat-value">$${(advStats.expectancy || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Sharpe Ratio</div>
+                            <div class="stat-value">${(advStats.sharpe_ratio || 0).toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+                
+                grid.appendChild(card);
+            });
+            
+            if (selectedCompareAccounts.length === 0) {
+                grid.innerHTML = '<div class="alert alert-info">Selecciona 2-3 cuentas arriba para compararlas</div>';
+            }
+        }
+
+        // Update VPS view
+        function updateVPSView() {
+            const view = document.getElementById('vpsView');
+            view.innerHTML = '';
+            
+            // Group accounts by VPS
+            const byVPS = {};
+            allAccountsData.forEach(acc => {
+                const vpsName = acc.vps_name || 'Unknown';
+                if (!byVPS[vpsName]) {
+                    byVPS[vpsName] = [];
+                }
+                byVPS[vpsName].push(acc);
+            });
+            
+            Object.keys(byVPS).forEach(vpsName => {
+                const accounts = byVPS[vpsName];
+                
+                let totalBalance = 0;
+                let totalEquity = 0;
+                let totalProfit = 0;
+                
+                let totalAccumulatedProfit = 0;
+
+                accounts.forEach(acc => {
+                    const account = acc.account || {};
+                    const stats = acc.stats || {};
+                    totalBalance += account.balance || 0;
+                    totalEquity += account.equity || 0;
+                    totalProfit += account.profit || 0;
+                    totalAccumulatedProfit += stats.total_profit || 0;
+                });
+
+                const accProfitClass = totalAccumulatedProfit >= 0 ? 'change-positive' : 'change-negative';
+                const accProfitSign = totalAccumulatedProfit >= 0 ? '+' : '';
+                
+                const vpsCard = document.createElement('div');
+                vpsCard.style.cssText = 'background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%); border-radius: 12px; padding: 25px; margin-bottom: 25px;';
+                
+                vpsCard.innerHTML = `
+                    <h2 style="margin-bottom: 20px;">🖥️ ${vpsName}</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="stat-box">
+                            <div class="stat-label">Cuentas</div>
+                            <div class="stat-value">${accounts.length}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Balance Total</div>
+                            <div class="stat-value">$${totalBalance.toFixed(2)}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Equity Total</div>
+                            <div class="stat-value">$${totalEquity.toFixed(2)}</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Current Profit/Loss Total</div>
+                            <div class="stat-value ${totalProfit >= 0 ? 'change-positive' : 'change-negative'}">
+                                ${totalProfit >= 0 ? '+' : ''}$${totalProfit.toFixed(2)}
+                            </div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-label">Profit/Loss Acumulado</div>
+                            <div class="stat-value ${accProfitClass}">
+                                ${accProfitSign}$${totalAccumulatedProfit.toFixed(2)}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;" id="vps-accounts-${vpsName}"></div>
+                `;
+                
+                view.appendChild(vpsCard);
+                
+                const accountsContainer = document.getElementById(`vps-accounts-${vpsName}`);
+                accounts.forEach(acc => {
+                    const account = acc.account || {};
+                    const stats = acc.stats || {};
+                    
+                    const miniCard = document.createElement('div');
+                    miniCard.style.cssText = 'background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; cursor: pointer;';
+                    miniCard.onclick = () => openAccountModal(acc);
+                    
+                    miniCard.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <strong>#${account.login}</strong>
+                            <span>${acc.ea_status?.paused ? '⏸️' : '▶️'}</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                            <div><span style="color: #94a3b8;">Balance:</span> $${(account.balance || 0).toFixed(2)}</div>
+                            <div><span style="color: #94a3b8;">Equity:</span> $${(account.equity || 0).toFixed(2)}</div>
+                            <div><span style="color: #94a3b8;">Win Rate:</span> ${(stats.win_rate || 0).toFixed(1)}%</div>
+                            <div><span style="color: #94a3b8;">Trades:</span> ${stats.total_trades || 0}</div>
+                        </div>
+                    `;
+                    
+                    accountsContainer.appendChild(miniCard);
+                });
+            });
+        }
+
+        // ========== MOTOR IA - ANÁLISIS ESTADÍSTICO INTELIGENTE ==========
+        
+        // Definición de sesiones de trading (GMT)
+        const TRADING_SESSIONS = {
+            ASIAN: { name: 'Asiática', start: 0, end: 9, color: '#f59e0b' },
+            EUROPEAN: { name: 'Europea', start: 8, end: 17, color: '#3b82f6' },
+            AMERICAN: { name: 'Americana', start: 13, end: 22, color: '#10b981' },
+            OVERLAP_EU_US: { name: 'Overlap EU-US', start: 13, end: 17, color: '#8b5cf6' }
+        };
+
+        function getSessionFromHour(hour) {
+            // hour debe estar en GMT
+            if (hour >= TRADING_SESSIONS.OVERLAP_EU_US.start && hour < TRADING_SESSIONS.OVERLAP_EU_US.end) {
+                return 'OVERLAP_EU_US';
+            } else if (hour >= TRADING_SESSIONS.EUROPEAN.start && hour < TRADING_SESSIONS.EUROPEAN.end) {
+                return 'EUROPEAN';
+            } else if (hour >= TRADING_SESSIONS.AMERICAN.start && hour < TRADING_SESSIONS.AMERICAN.end) {
+                return 'AMERICAN';
+            } else {
+                return 'ASIAN';
+            }
+        }
+
+        function extractRSIFromComment(comment) {
+            // Extrae nivel y valor RSI de comentarios como "BUY_L2_RSI15.0" o "SELL_L1_RSI70.0"
+            const match = comment.match(/(BUY|SELL)_L(\d)_RSI([\d\.]+)/);
+            if (match) {
+                return {
+                    type: match[1],
+                    level: parseInt(match[2]),
+                    rsi_value: parseFloat(match[3])
+                };
+            }
+            // Formato antiguo sin RSI
+            const oldMatch = comment.match(/(BUY|SELL)_L(\d)/);
+            if (oldMatch) {
+                return {
+                    type: oldMatch[1],
+                    level: parseInt(oldMatch[2]),
+                    rsi_value: null
+                };
+            }
+            return null;
+        }
+
+        function updateAIMotor() {
+            const content = document.getElementById('aiMotorContent');
+            
+            // Recolectar todos los trades del bot Edge5 Vector EA
+            let allTrades = [];
+            
+            // Procesar journal de todas las cuentas
+            for (const login in journalData) {
+                const journal = journalData[login];
+                if (journal && journal.closed_trades) {
+                    journal.closed_trades.forEach(trade => {
+                        const rsiData = extractRSIFromComment(trade.comment || '');
+                        if (rsiData) {
+                            allTrades.push({
+                                ...trade,
+                                login: login,
+                                rsi_level: rsiData.level,
+                                rsi_value: rsiData.rsi_value,
+                                type: rsiData.type
+                            });
+                        }
+                    });
+                }
+            }
+
+            if (allTrades.length === 0) {
+                content.innerHTML = `
+                    <div class="alert alert-info">
+                        <strong>🤖 Motor IA - Sin datos disponibles</strong><br>
+                        No se encontraron trades del bot Edge5 Vector EA en el historial.<br>
+                        Asegúrate de que el EA esté generando trades con comentarios en formato: BUY_L1_RSI23.1
+                    </div>
+                `;
+                return;
+            }
+
+            // ========== ANÁLISIS POR NIVEL RSI ==========
+            const rsiAnalysis = { BUY: {}, SELL: {} };
+            
+            for (let i = 1; i <= 4; i++) {
+                rsiAnalysis.BUY[i] = { trades: 0, wins: 0, losses: 0, profit: 0, rsi_values: [] };
+                rsiAnalysis.SELL[i] = { trades: 0, wins: 0, losses: 0, profit: 0, rsi_values: [] };
+            }
+
+            allTrades.forEach(trade => {
+                const level = trade.rsi_level;
+                const type = trade.type;
+                const profit = trade.profit || 0;
+                
+                if (rsiAnalysis[type] && rsiAnalysis[type][level]) {
+                    rsiAnalysis[type][level].trades++;
+                    rsiAnalysis[type][level].profit += profit;
+                    if (profit > 0) rsiAnalysis[type][level].wins++;
+                    if (profit < 0) rsiAnalysis[type][level].losses++;
+                    if (trade.rsi_value) rsiAnalysis[type][level].rsi_values.push(trade.rsi_value);
+                }
+            });
+
+            // ========== ANÁLISIS POR SESIÓN ==========
+            const sessionAnalysis = {};
+            Object.keys(TRADING_SESSIONS).forEach(key => {
+                sessionAnalysis[key] = { trades: 0, wins: 0, losses: 0, profit: 0 };
+            });
+
+            allTrades.forEach(trade => {
+                // Convertir tiempo del trade a hora GMT
+                // Asumimos que trade.open_time está en timestamp
+                const date = new Date(trade.open_time * 1000);
+                const hourGMT = date.getUTCHours(); // Hora en GMT
+                
+                const session = getSessionFromHour(hourGMT);
+                const profit = trade.profit || 0;
+                
+                sessionAnalysis[session].trades++;
+                sessionAnalysis[session].profit += profit;
+                if (profit > 0) sessionAnalysis[session].wins++;
+                if (profit < 0) sessionAnalysis[session].losses++;
+            });
+
+            // ========== ANÁLISIS POR PAR ==========
+            const pairAnalysis = {};
+            allTrades.forEach(trade => {
+                const symbol = trade.symbol || 'Unknown';
+                if (!pairAnalysis[symbol]) {
+                    pairAnalysis[symbol] = { trades: 0, wins: 0, losses: 0, profit: 0 };
+                }
+                const profit = trade.profit || 0;
+                pairAnalysis[symbol].trades++;
+                pairAnalysis[symbol].profit += profit;
+                if (profit > 0) pairAnalysis[symbol].wins++;
+                if (profit < 0) pairAnalysis[symbol].losses++;
+            });
+
+            // ========== ANÁLISIS POR DÍA DE LA SEMANA ==========
+            const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+            const dayAnalysis = {};
+            dayNames.forEach(day => {
+                dayAnalysis[day] = { trades: 0, wins: 0, losses: 0, profit: 0 };
+            });
+
+            allTrades.forEach(trade => {
+                const date = new Date(trade.open_time * 1000);
+                const dayName = dayNames[date.getUTCDay()];
+                const profit = trade.profit || 0;
+                
+                dayAnalysis[dayName].trades++;
+                dayAnalysis[dayName].profit += profit;
+                if (profit > 0) dayAnalysis[dayName].wins++;
+                if (profit < 0) dayAnalysis[dayName].losses++;
+            });
+
+            // ========== GENERAR RECOMENDACIONES ==========
+            const recommendations = [];
+            
+            // Recomendaciones RSI
+            for (let i = 1; i <= 4; i++) {
+                const buyData = rsiAnalysis.BUY[i];
+                const sellData = rsiAnalysis.SELL[i];
+                
+                if (buyData.trades > 5) {
+                    const winrate = (buyData.wins / buyData.trades) * 100;
+                    if (winrate > 70) {
+                        recommendations.push({ type: 'success', text: `✅ BUY Level ${i} es muy rentable (${winrate.toFixed(1)}% winrate)` });
+                    } else if (winrate < 45) {
+                        recommendations.push({ type: 'danger', text: `❌ Considera desactivar BUY Level ${i} (${winrate.toFixed(1)}% winrate)` });
+                    }
+                }
+                
+                if (sellData.trades > 5) {
+                    const winrate = (sellData.wins / sellData.trades) * 100;
+                    if (winrate > 70) {
+                        recommendations.push({ type: 'success', text: `✅ SELL Level ${i} es muy rentable (${winrate.toFixed(1)}% winrate)` });
+                    } else if (winrate < 45) {
+                        recommendations.push({ type: 'danger', text: `❌ Considera desactivar SELL Level ${i} (${winrate.toFixed(1)}% winrate)` });
+                    }
+                }
+            }
+
+            // Recomendaciones por sesión
+            Object.keys(sessionAnalysis).forEach(key => {
+                const data = sessionAnalysis[key];
+                if (data.trades > 10) {
+                    const winrate = (data.wins / data.trades) * 100;
+                    const sessionName = TRADING_SESSIONS[key].name;
+                    if (winrate > 70) {
+                        recommendations.push({ type: 'success', text: `✅ Mejores resultados en sesión ${sessionName} (${winrate.toFixed(1)}% winrate)` });
+                    } else if (winrate < 45) {
+                        recommendations.push({ type: 'warning', text: `⚠️ Reducir exposición en sesión ${sessionName} (${winrate.toFixed(1)}% winrate)` });
+                    }
+                }
+            });
+
+            // ========== RENDERIZAR UI ==========
+            let html = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;">🤖 MOTOR IA - EDGE5 VECTOR EA</h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="saveSnapshotNow()">💾 Guardar Snapshot</button>
+                        <button class="btn btn-primary" onclick="toggleEvolutionView()">📈 Evolución Histórica</button>
+                        <button class="btn btn-secondary" onclick="exportAllData()">📥 Exportar Datos</button>
+                    </div>
+                </div>
+                
+                <div id="evolutionSection" style="display: none; background: rgba(102, 126, 234, 0.1); border: 1px solid #667eea; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">📈 EVOLUCIÓN HISTÓRICA</h3>
+                    <div id="evolutionContent">Cargando datos históricos...</div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">📌 ESTRATEGIA DEL BOT</h3>
+                    <p style="line-height: 1.6; color: #94a3b8;">
+                        <strong>Edge5 Vector EA</strong> opera basado en niveles de RSI. Utiliza 4 niveles de sobreventa 
+                        (RSI bajo) y 4 niveles de sobrecompra (RSI alto) para abrir posiciones de reversión. 
+                        El sistema detecta condiciones de sobrecompra/sobreventa extrema para identificar puntos de entrada.
+                    </p>
+                    <p style="margin-top: 10px; color: #e2e8f0;">
+                        <strong>Total de trades analizados:</strong> ${allTrades.length} | 
+                        <strong>Periodo:</strong> Histórico completo
+                    </p>
+                </div>
+
+                <h3 style="margin: 25px 0 15px 0; color: #667eea;">📊 ANÁLISIS POR NIVEL RSI</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+            `;
+
+            // Tabla BUY Levels
+            html += `<div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px;">
+                <h4 style="margin-bottom: 15px; color: #10b981;">🟢 BUY LEVELS</h4>
+                <table style="width: 100%; font-size: 13px;">
+                    <thead><tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 10px; text-align: left;">Level</th>
+                        <th style="padding: 10px;">Trades</th>
+                        <th style="padding: 10px;">WinRate</th>
+                        <th style="padding: 10px;">Profit</th>
+                    </tr></thead>
+                    <tbody>`;
+            
+            for (let i = 1; i <= 4; i++) {
+                const data = rsiAnalysis.BUY[i];
+                const winrate = data.trades > 0 ? (data.wins / data.trades) * 100 : 0;
+                const avgRSI = data.rsi_values.length > 0 
+                    ? (data.rsi_values.reduce((a, b) => a + b, 0) / data.rsi_values.length).toFixed(1) 
+                    : 'N/A';
+                const statusIcon = winrate > 60 ? '✅' : winrate > 50 ? '⚠️' : '❌';
+                const profitColor = data.profit >= 0 ? '#10b981' : '#ef4444';
+                
+                html += `<tr style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 10px;">Level ${i} ${statusIcon}<br><small style="color: #94a3b8;">RSI avg: ${avgRSI}</small></td>
+                    <td style="padding: 10px;">${data.trades}</td>
+                    <td style="padding: 10px; color: ${winrate > 55 ? '#10b981' : '#ef4444'}">${winrate.toFixed(1)}%</td>
+                    <td style="padding: 10px; color: ${profitColor}; font-weight: 700;">${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}</td>
+                </tr>`;
+            }
+            
+            html += `</tbody></table></div>`;
+
+            // Tabla SELL Levels
+            html += `<div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px;">
+                <h4 style="margin-bottom: 15px; color: #ef4444;">🔴 SELL LEVELS</h4>
+                <table style="width: 100%; font-size: 13px;">
+                    <thead><tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 10px; text-align: left;">Level</th>
+                        <th style="padding: 10px;">Trades</th>
+                        <th style="padding: 10px;">WinRate</th>
+                        <th style="padding: 10px;">Profit</th>
+                    </tr></thead>
+                    <tbody>`;
+            
+            for (let i = 1; i <= 4; i++) {
+                const data = rsiAnalysis.SELL[i];
+                const winrate = data.trades > 0 ? (data.wins / data.trades) * 100 : 0;
+                const avgRSI = data.rsi_values.length > 0 
+                    ? (data.rsi_values.reduce((a, b) => a + b, 0) / data.rsi_values.length).toFixed(1) 
+                    : 'N/A';
+                const statusIcon = winrate > 60 ? '✅' : winrate > 50 ? '⚠️' : '❌';
+                const profitColor = data.profit >= 0 ? '#10b981' : '#ef4444';
+                
+                html += `<tr style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 10px;">Level ${i} ${statusIcon}<br><small style="color: #94a3b8;">RSI avg: ${avgRSI}</small></td>
+                    <td style="padding: 10px;">${data.trades}</td>
+                    <td style="padding: 10px; color: ${winrate > 55 ? '#10b981' : '#ef4444'}">${winrate.toFixed(1)}%</td>
+                    <td style="padding: 10px; color: ${profitColor}; font-weight: 700;">${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}</td>
+                </tr>`;
+            }
+            
+            html += `</tbody></table></div></div>`;
+
+            // Análisis por sesión
+            html += `<h3 style="margin: 25px 0 15px 0; color: #667eea;">🌍 ANÁLISIS POR SESIÓN DE TRADING</h3>
+                <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                <table style="width: 100%; font-size: 13px;">
+                    <thead><tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 10px; text-align: left;">Sesión</th>
+                        <th style="padding: 10px;">Trades</th>
+                        <th style="padding: 10px;">WinRate</th>
+                        <th style="padding: 10px;">Profit</th>
+                    </tr></thead>
+                    <tbody>`;
+            
+            Object.keys(TRADING_SESSIONS).forEach(key => {
+                const data = sessionAnalysis[key];
+                const session = TRADING_SESSIONS[key];
+                const winrate = data.trades > 0 ? (data.wins / data.trades) * 100 : 0;
+                const statusIcon = winrate > 65 ? '✅✅' : winrate > 55 ? '✅' : '⚠️';
+                const profitColor = data.profit >= 0 ? '#10b981' : '#ef4444';
+                
+                html += `<tr style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 10px;"><span style="color: ${session.color};">●</span> ${session.name} ${statusIcon}</td>
+                    <td style="padding: 10px;">${data.trades}</td>
+                    <td style="padding: 10px; color: ${winrate > 55 ? '#10b981' : '#ef4444'}">${winrate.toFixed(1)}%</td>
+                    <td style="padding: 10px; color: ${profitColor}; font-weight: 700;">${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}</td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table></div>`;
+
+            // Análisis por par
+            html += `<h3 style="margin: 25px 0 15px 0; color: #667eea;">📈 ANÁLISIS POR PAR</h3>
+                <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                <table style="width: 100%; font-size: 13px;">
+                    <thead><tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 10px; text-align: left;">Par</th>
+                        <th style="padding: 10px;">Trades</th>
+                        <th style="padding: 10px;">WinRate</th>
+                        <th style="padding: 10px;">Profit</th>
+                    </tr></thead>
+                    <tbody>`;
+            
+            // Ordenar pares por profit
+            const sortedPairs = Object.entries(pairAnalysis).sort((a, b) => b[1].profit - a[1].profit);
+            sortedPairs.forEach(([symbol, data]) => {
+                const winrate = data.trades > 0 ? (data.wins / data.trades) * 100 : 0;
+                const profitColor = data.profit >= 0 ? '#10b981' : '#ef4444';
+                
+                html += `<tr style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 10px;"><strong>${symbol}</strong></td>
+                    <td style="padding: 10px;">${data.trades}</td>
+                    <td style="padding: 10px; color: ${winrate > 55 ? '#10b981' : '#ef4444'}">${winrate.toFixed(1)}%</td>
+                    <td style="padding: 10px; color: ${profitColor}; font-weight: 700;">${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}</td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table></div>`;
+
+            // Análisis por día
+            html += `<h3 style="margin: 25px 0 15px 0; color: #667eea;">📅 ANÁLISIS POR DÍA DE LA SEMANA</h3>
+                <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px;">
+                <table style="width: 100%; font-size: 13px;">
+                    <thead><tr style="background: rgba(255,255,255,0.05);">
+                        <th style="padding: 10px; text-align: left;">Día</th>
+                        <th style="padding: 10px;">Trades</th>
+                        <th style="padding: 10px;">WinRate</th>
+                        <th style="padding: 10px;">Profit</th>
+                    </tr></thead>
+                    <tbody>`;
+            
+            ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'].forEach(day => {
+                const data = dayAnalysis[day];
+                const winrate = data.trades > 0 ? (data.wins / data.trades) * 100 : 0;
+                const profitColor = data.profit >= 0 ? '#10b981' : '#ef4444';
+                
+                html += `<tr style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 10px;"><strong>${day}</strong></td>
+                    <td style="padding: 10px;">${data.trades}</td>
+                    <td style="padding: 10px; color: ${winrate > 55 ? '#10b981' : '#ef4444'}">${winrate.toFixed(1)}%</td>
+                    <td style="padding: 10px; color: ${profitColor}; font-weight: 700;">${data.profit >= 0 ? '+' : ''}$${data.profit.toFixed(2)}</td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table></div>`;
+
+            // Recomendaciones
+            if (recommendations.length > 0) {
+                html += `<h3 style="margin: 25px 0 15px 0; color: #667eea;">💡 RECOMENDACIONES</h3>
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 12px; margin-bottom: 25px;">`;
+                
+                recommendations.forEach(rec => {
+                    const bgColor = rec.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 
+                                    rec.type === 'danger' ? 'rgba(239, 68, 68, 0.1)' : 
+                                    'rgba(245, 158, 11, 0.1)';
+                    const borderColor = rec.type === 'success' ? '#10b981' : 
+                                        rec.type === 'danger' ? '#ef4444' : '#f59e0b';
+                    
+                    html += `<div style="padding: 12px; background: ${bgColor}; border-left: 4px solid ${borderColor}; margin-bottom: 10px; border-radius: 4px;">
+                        ${rec.text}
+                    </div>`;
+                });
+                
+                html += `</div>`;
+            }
+
+            content.innerHTML = html;
+            
+            // Guardar datos del análisis actual
+            currentAnalysisData = {
+                total_trades: allTrades.length,
+                total_profit: allTrades.reduce((sum, t) => sum + (t.profit || 0), 0),
+                winrate_global: allTrades.length > 0 ? 
+                    (allTrades.filter(t => (t.profit || 0) > 0).length / allTrades.length) * 100 : 0,
+                rsi_analysis: rsiAnalysis,
+                session_analysis: sessionAnalysis,
+                pair_analysis: pairAnalysis,
+                day_analysis: dayAnalysis,
+                recommendations: recommendations,
+                drawdown_stats: calculateDrawdownStats(allTrades)
+            };
+            
+            // Verificar auto-snapshot
+            checkAndSaveAutoSnapshot();
+        }
+
+        // ========== FUNCIONES DE PERSISTENCIA HISTÓRICA ==========
+        
+        function calculateDrawdownStats(trades) {
+            if (trades.length === 0) return { max_dd: 0, avg_dd: 0, dd_days: 0 };
+            
+            let runningBalance = 0;
+            let peak = 0;
+            let maxDD = 0;
+            let ddDays = 0;
+            let inDD = false;
+            
+            trades.forEach(trade => {
+                runningBalance += (trade.profit || 0);
+                if (runningBalance > peak) {
+                    peak = runningBalance;
+                    inDD = false;
+                } else {
+                    if (!inDD) {
+                        inDD = true;
+                        ddDays++;
+                    }
+                    const currentDD = peak > 0 ? ((peak - runningBalance) / peak) * 100 : 0;
+                    if (currentDD > maxDD) maxDD = currentDD;
+                }
+            });
+            
+            return {
+                max_dd: maxDD,
+                avg_dd: maxDD / 2,
+                dd_days: ddDays
+            };
+        }
+        
+        async function saveSnapshotNow() {
+            if (!currentAnalysisData) {
+                alert('⚠️ No hay datos disponibles para guardar');
+                return;
+            }
+            
+            const now = new Date();
+            const weekNum = getWeekNumber(now);
+            const monthNum = now.getMonth() + 1;
+            const year = now.getFullYear();
+            
+            const weeklyPeriod = `${year}-W${String(weekNum).padStart(2, '0')}`;
+            const monthlyPeriod = `${year}-${String(monthNum).padStart(2, '0')}`;
+            
+            try {
+                await saveSnapshot(weeklyPeriod, 'weekly');
+                await saveSnapshot(monthlyPeriod, 'monthly');
+                alert('✅ Snapshots guardados exitosamente');
+                await loadHistoricalSnapshots();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al guardar: ' + error.message);
+            }
+        }
+        
+        async function saveSnapshot(period, type) {
+            const snapshotData = {
+                period: period,
+                type: type,
+                generated_at: new Date().toISOString(),
+                ...currentAnalysisData
+            };
+            
+            const response = await fetch(`${BACKEND_URL}/api/snapshot/save`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(snapshotData)
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
+        async function loadHistoricalSnapshots() {
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/snapshots/list`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                historicalSnapshots = await response.json();
+                console.log(`✅ Cargados ${historicalSnapshots.length} snapshots`);
+            } catch (error) {
+                console.error('Error:', error);
+                historicalSnapshots = [];
+            }
+        }
+        
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+        
+        let lastSnapshotWeek = null;
+        let lastSnapshotMonth = null;
+        
+        async function checkAndSaveAutoSnapshot() {
+            const now = new Date();
+            const currentWeek = getWeekNumber(now);
+            const currentMonth = now.getMonth() + 1;
+            const year = now.getFullYear();
+            
+            const weeklyPeriod = `${year}-W${String(currentWeek).padStart(2, '0')}`;
+            const monthlyPeriod = `${year}-${String(currentMonth).padStart(2, '0')}`;
+            
+            if (lastSnapshotWeek !== weeklyPeriod) {
+                try {
+                    await saveSnapshot(weeklyPeriod, 'weekly');
+                    lastSnapshotWeek = weeklyPeriod;
+                    console.log(`✅ Snapshot semanal: ${weeklyPeriod}`);
+                } catch (error) {
+                    console.error('Error auto-snapshot semanal:', error);
+                }
+            }
+            
+            if (lastSnapshotMonth !== monthlyPeriod) {
+                try {
+                    await saveSnapshot(monthlyPeriod, 'monthly');
+                    lastSnapshotMonth = monthlyPeriod;
+                    console.log(`✅ Snapshot mensual: ${monthlyPeriod}`);
+                } catch (error) {
+                    console.error('Error auto-snapshot mensual:', error);
+                }
+            }
+        }
+        
+        let evolutionViewVisible = false;
+        
+        async function toggleEvolutionView() {
+            evolutionViewVisible = !evolutionViewVisible;
+            const evolutionSection = document.getElementById('evolutionSection');
+            
+            if (evolutionViewVisible) {
+                evolutionSection.style.display = 'block';
+                await renderEvolutionAnalysis();
+            } else {
+                evolutionSection.style.display = 'none';
+            }
+        }
+        
+        async function renderEvolutionAnalysis() {
+            const evolutionContent = document.getElementById('evolutionContent');
+            
+            if (historicalSnapshots.length === 0) {
+                await loadHistoricalSnapshots();
+            }
+            
+            if (historicalSnapshots.length < 2) {
+                evolutionContent.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                        📊 Se necesitan al menos 2 snapshots para mostrar evolución<br>
+                        <small>Los snapshots se guardan automáticamente cada semana y mes</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            const monthlySnapshots = historicalSnapshots
+                .filter(s => s.type === 'monthly')
+                .sort((a, b) => b.period.localeCompare(a.period))
+                .slice(0, 12);
+            
+            let html = `<h4 style="margin-bottom: 15px; color: #667eea;">📈 COMPARACIÓN MENSUAL</h4>
+                <div style="overflow-x: auto; margin-bottom: 25px;">
+                    <table style="width: 100%; font-size: 13px;">
+                        <thead><tr style="background: rgba(255,255,255,0.05);">
+                            <th style="padding: 10px; text-align: left;">Mes</th>
+                            <th style="padding: 10px;">Trades</th>
+                            <th style="padding: 10px;">WinRate</th>
+                            <th style="padding: 10px;">Profit</th>
+                            <th style="padding: 10px;">Max DD</th>
+                            <th style="padding: 10px;">Tendencia</th>
+                        </tr></thead>
+                        <tbody>`;
+            
+            monthlySnapshots.forEach((snapshot, index) => {
+                const winrate = snapshot.winrate_global || 0;
+                const profit = snapshot.total_profit || 0;
+                const maxDD = snapshot.drawdown_stats?.max_dd || 0;
+                
+                let trendIcon = '—';
+                if (index < monthlySnapshots.length - 1) {
+                    const prevWinrate = monthlySnapshots[index + 1].winrate_global || 0;
+                    if (winrate > prevWinrate + 2) trendIcon = '📈';
+                    else if (winrate < prevWinrate - 2) trendIcon = '📉';
+                    else trendIcon = '➡️';
+                }
+                
+                html += `<tr style="border-top: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 10px;"><strong>${snapshot.period}</strong></td>
+                    <td style="padding: 10px;">${snapshot.total_trades || 0}</td>
+                    <td style="padding: 10px; color: ${winrate > 60 ? '#10b981' : '#ef4444'}">${winrate.toFixed(1)}%</td>
+                    <td style="padding: 10px; color: ${profit >= 0 ? '#10b981' : '#ef4444'}; font-weight: 700;">
+                        ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}
+                    </td>
+                    <td style="padding: 10px; color: #f59e0b">${maxDD.toFixed(1)}%</td>
+                    <td style="padding: 10px; font-size: 18px;">${trendIcon}</td>
+                </tr>`;
+            });
+            
+            html += `</tbody></table></div>`;
+            
+            html += `<h4 style="margin: 25px 0 15px 0; color: #667eea;">📊 EVOLUCIÓN DE NIVELES RSI</h4>
+                <div style="background: rgba(255,255,255,0.03); padding: 15px; border-radius: 8px; margin-bottom: 25px;">`;
+            
+            const buyL2Evolution = monthlySnapshots.map(s => {
+                const buyL2 = s.rsi_analysis?.BUY?.[2];
+                if (!buyL2 || buyL2.trades === 0) return null;
+                return {
+                    period: s.period,
+                    winrate: (buyL2.wins / buyL2.trades) * 100,
+                    profit: buyL2.profit
+                };
+            }).filter(Boolean);
+            
+            if (buyL2Evolution.length >= 2) {
+                const latest = buyL2Evolution[0];
+                const oldest = buyL2Evolution[buyL2Evolution.length - 1];
+                const trend = latest.winrate > oldest.winrate ? '📈 MEJORANDO' : '📉 EMPEORANDO';
+                const trendColor = latest.winrate > oldest.winrate ? '#10b981' : '#ef4444';
+                
+                html += `<div style="padding: 12px; background: rgba(102, 126, 234, 0.1); border-left: 4px solid ${trendColor}; margin-bottom: 10px; border-radius: 4px;">
+                    <strong>BUY Level 2:</strong><br>
+                    ${oldest.period}: ${oldest.winrate.toFixed(1)}% → ${latest.period}: ${latest.winrate.toFixed(1)}% 
+                    <span style="color: ${trendColor}">${trend}</span>
+                </div>`;
+            }
+            
+            html += `</div>`;
+            
+            if (monthlySnapshots.length > 0) {
+                const sortedByProfit = [...monthlySnapshots].sort((a, b) => 
+                    (b.total_profit || 0) - (a.total_profit || 0)
+                );
+                
+                html += `<h4 style="margin: 25px 0 15px 0; color: #667eea;">🏆 MEJORES Y PEORES MESES</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                        <div style="background: rgba(16, 185, 129, 0.1); padding: 15px; border-radius: 8px;">
+                            <h5 style="color: #10b981; margin-bottom: 10px;">🏆 MEJORES MESES</h5>`;
+                
+                sortedByProfit.slice(0, 3).forEach((s, i) => {
+                    html += `<div style="padding: 8px; margin-bottom: 5px;">
+                        ${i + 1}. ${s.period}: <strong style="color: #10b981;">+$${(s.total_profit || 0).toFixed(2)}</strong> 
+                        (${(s.winrate_global || 0).toFixed(1)}% WR)
+                    </div>`;
+                });
+                
+                html += `</div><div style="background: rgba(239, 68, 68, 0.1); padding: 15px; border-radius: 8px;">
+                    <h5 style="color: #ef4444; margin-bottom: 10px;">⚠️ PEORES MESES</h5>`;
+                
+                sortedByProfit.slice(-3).reverse().forEach((s, i) => {
+                    const profit = s.total_profit || 0;
+                    html += `<div style="padding: 8px; margin-bottom: 5px;">
+                        ${i + 1}. ${s.period}: <strong style="color: ${profit >= 0 ? '#10b981' : '#ef4444'};">
+                        ${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}</strong> 
+                        (${(s.winrate_global || 0).toFixed(1)}% WR)
+                    </div>`;
+                });
+                
+                html += `</div></div>`;
+            }
+            
+            if (monthlySnapshots.length >= 3) {
+                const totalTrades = monthlySnapshots.reduce((sum, s) => sum + (s.total_trades || 0), 0);
+                const totalProfit = monthlySnapshots.reduce((sum, s) => sum + (s.total_profit || 0), 0);
+                const avgWinrate = monthlySnapshots.reduce((sum, s) => sum + (s.winrate_global || 0), 0) / monthlySnapshots.length;
+                const avgDD = monthlySnapshots.reduce((sum, s) => sum + (s.drawdown_stats?.max_dd || 0), 0) / monthlySnapshots.length;
+                const positiveMonths = monthlySnapshots.filter(s => (s.total_profit || 0) > 0).length;
+                
+                html += `<h4 style="margin: 25px 0 15px 0; color: #667eea;">📊 RESUMEN DE ${monthlySnapshots.length} MESES</h4>
+                    <div style="background: rgba(102, 126, 234, 0.1); padding: 20px; border-radius: 8px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                            <div>
+                                <div style="color: #94a3b8; font-size: 12px;">PROFIT ACUMULADO</div>
+                                <div style="font-size: 24px; font-weight: 700; color: ${totalProfit >= 0 ? '#10b981' : '#ef4444'};">
+                                    ${totalProfit >= 0 ? '+' : ''}$${totalProfit.toFixed(2)}
+                                </div>
+                            </div>
+                            <div>
+                                <div style="color: #94a3b8; font-size: 12px;">WINRATE PROMEDIO</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #667eea;">${avgWinrate.toFixed(1)}%</div>
+                            </div>
+                            <div>
+                                <div style="color: #94a3b8; font-size: 12px;">CONSISTENCIA</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #10b981;">
+                                    ${positiveMonths}/${monthlySnapshots.length} meses +
+                                </div>
+                            </div>
+                            <div>
+                                <div style="color: #94a3b8; font-size: 12px;">DD PROMEDIO</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #f59e0b;">${avgDD.toFixed(1)}%</div>
+                            </div>
+                            <div>
+                                <div style="color: #94a3b8; font-size: 12px;">TRADES TOTALES</div>
+                                <div style="font-size: 24px; font-weight: 700; color: #e2e8f0;">${totalTrades}</div>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            
+            evolutionContent.innerHTML = html;
+        }
+        
+        async function exportAllData() {
+            try {
+                const dataToExport = {
+                    current_analysis: currentAnalysisData,
+                    historical_snapshots: historicalSnapshots,
+                    export_date: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `motor-ia-export-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                
+                alert('✅ Datos exportados exitosamente');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Error al exportar: ' + error.message);
+            }
+        }
+        
+        setTimeout(() => {
+            loadHistoricalSnapshots();
+        }, 2000);
+
+        // Switch tabs
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            // Inicializar journal la primera vez que se accede
+            if (tabName === 'journal' && !journalInitialized) {
+                updateJournal();
+            }
+        }
+
+        // Open account modal
+        function openAccountModal(acc) {
+            const account = acc.account || {};
+            const stats = acc.stats || {};
+            const advStats = acc.advanced_stats || {};
+            const prot = acc.protection;
+            
+            document.getElementById('modalAccountTitle').textContent = `Cuenta #${account.login}`;
+            
+            let html = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div class="stat-box">
+                        <div class="stat-label">VPS</div>
+                        <div class="stat-value" style="font-size: 16px;">${acc.vps_name}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Servidor</div>
+                        <div class="stat-value" style="font-size: 16px;">${account.server || 'N/A'}</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin: 25px 0 15px 0;">💰 Información de Cuenta en vivo</h3>
+                <div class="stat-boxes">
+                    <div class="stat-box">
+                        <div class="stat-label">Balance</div>
+                        <div class="stat-value">$${(account.balance || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Equity</div>
+                        <div class="stat-value">$${(account.equity || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Profit/Loss</div>
+                        <div class="stat-value ${(account.profit || 0) >= 0 ? 'change-positive' : 'change-negative'}">
+                            ${(account.profit || 0) >= 0 ? '+' : ''}$${(account.profit || 0).toFixed(2)}
+                        </div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Margen</div>
+                        <div class="stat-value">$${(account.margin || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Margen Libre</div>
+                        <div class="stat-value">$${((account.equity || 0) - (account.margin || 0)).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Nivel de Margen</div>
+                        <div class="stat-value">${(account.margin_level || 0).toFixed(2)}%</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Current DD</div>
+                        <div class="stat-value" style="color: #f59e0b">${(() => {
+                            const profit = account.profit || 0;
+                            const balance = account.balance || 0;
+                            return (profit < 0 && balance > 0) ? Math.abs((profit / balance) * 100).toFixed(2) : '0.00';
+                        })()}%</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin: 25px 0 15px 0;">📊 Estadísticas Básicas</h3>
+                <div class="stat-boxes">
+                    <div class="stat-box">
+                        <div class="stat-label">Total Trades</div>
+                        <div class="stat-value">${stats.total_trades || 0}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Ganadores</div>
+                        <div class="stat-value" style="color: #10b981">${stats.winning_trades || 0}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Perdedores</div>
+                        <div class="stat-value" style="color: #ef4444">${stats.losing_trades || 0}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Win Rate</div>
+                        <div class="stat-value">${(stats.win_rate || 0).toFixed(2)}%</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Profit Factor</div>
+                        <div class="stat-value">${(stats.profit_factor || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Max DD</div>
+                        <div class="stat-value" style="color: #ef4444">${(stats.max_dd || 0).toFixed(2)}%</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin: 25px 0 15px 0;">📈 Estadísticas Avanzadas</h3>
+                <div class="stat-boxes">
+                    <div class="stat-box">
+                        <div class="stat-label">Expectancy</div>
+                        <div class="stat-value">$${(advStats.expectancy || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Sharpe Ratio</div>
+                        <div class="stat-value">${(advStats.sharpe_ratio || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Recovery Factor</div>
+                        <div class="stat-value">${(advStats.recovery_factor || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg RRR</div>
+                        <div class="stat-value">${(advStats.avg_rrr || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg Win</div>
+                        <div class="stat-value" style="color: #10b981">$${(advStats.avg_win || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg Loss</div>
+                        <div class="stat-value" style="color: #ef4444">$${(advStats.avg_loss || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Best Trade</div>
+                        <div class="stat-value" style="color: #10b981">$${(advStats.best_trade || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Worst Trade</div>
+                        <div class="stat-value" style="color: #ef4444">$${(advStats.worst_trade || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Max Consecutive Wins</div>
+                        <div class="stat-value" style="color: #10b981">${advStats.max_consecutive_wins || 0}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Max Consecutive Losses</div>
+                        <div class="stat-value" style="color: #ef4444">${advStats.max_consecutive_losses || 0}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Total Volume</div>
+                        <div class="stat-value">${(advStats.total_volume || 0).toFixed(2)} lots</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Total Profit</div>
+                        <div class="stat-value" style="color: #10b981">$${(advStats.total_profit || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Total Loss</div>
+                        <div class="stat-value" style="color: #ef4444">$${(advStats.total_loss || 0).toFixed(2)}</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">NET P&L</div>
+                        <div class="stat-value" style="color: ${((advStats.total_profit || 0) - Math.abs(advStats.total_loss || 0)) >= 0 ? '#10b981' : '#ef4444'}">$${((advStats.total_profit || 0) - Math.abs(advStats.total_loss || 0)).toFixed(2)}</div>
+                    </div>
+                </div>
+                
+                <h3 style="margin: 25px 0 15px 0;">📊 Trades Abiertos (${(acc.open_trades || []).length})</h3>
+            `;
+            
+            if ((acc.open_trades || []).length > 0) {
+                html += '<div style="overflow-x: auto;"><table style="width: 100%; font-size: 13px;">';
+                html += '<thead><tr style="background: rgba(255,255,255,0.05);"><th style="padding: 10px; text-align: left;">Ticket</th><th style="padding: 10px;">Symbol</th><th style="padding: 10px;">Type</th><th style="padding: 10px;">Volume</th><th style="padding: 10px;">Open Price</th><th style="padding: 10px;">Current Price</th><th style="padding: 10px;">Profit</th><th style="padding: 10px;">Duration</th></tr></thead><tbody>';
+                
+                (acc.open_trades || []).forEach(trade => {
+                    const profitClass = (trade.profit || 0) >= 0 ? 'change-positive' : 'change-negative';
+                    const duration = trade.duration || 0;
+                    const hours = Math.floor(duration / 3600);
+                    const minutes = Math.floor((duration % 3600) / 60);
+                    
+                    html += `<tr style="border-top: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 10px;">${trade.ticket}</td>
+                        <td style="padding: 10px;">${trade.symbol}</td>
+                        <td style="padding: 10px;">${trade.type === 'buy' ? '🟢 BUY' : '🔴 SELL'}</td>
+                        <td style="padding: 10px;">${(trade.volume || 0).toFixed(2)}</td>
+                        <td style="padding: 10px;">${(trade.open_price || 0).toFixed(5)}</td>
+                        <td style="padding: 10px;">${(trade.current_price || 0).toFixed(5)}</td>
+                        <td class="${profitClass}" style="padding: 10px; font-weight: 700;">${(trade.profit || 0) >= 0 ? '+' : ''}$${(trade.profit || 0).toFixed(2)}</td>
+                        <td style="padding: 10px;">${hours}h ${minutes}m</td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+            } else {
+                html += '<div class="alert alert-info">No hay trades abiertos</div>';
+            }
+            
+            html += `
+                <h3 style="margin: 25px 0 15px 0;">🎛️ Comandos de Emergencia</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-danger" onclick="confirmCloseAll(${account.login}, '${acc.vps_name}', ${acc.vps_port}, '${acc.vps_ip}')">
+                        🛑 Cerrar Todos los Trades
+                    </button>
+                    <button class="btn btn-warning" onclick="confirmPauseEA(${account.login}, '${acc.vps_name}', ${acc.vps_port}, '${acc.vps_ip}')">
+                        ⏸️ Pausar EA
+                    </button>
+                    <button class="btn btn-success" onclick="confirmResumeEA(${account.login}, '${acc.vps_name}', ${acc.vps_port}, '${acc.vps_ip}')">
+                        ▶️ Reanudar EA
+                    </button>
+                </div>
+            `;
+            
+            if (prot) {
+                html += generateProtectionPanel(prot, account, stats);
+            } else {
+                html += `<div class="alert alert-info" style="margin-top: 20px;">
+                    ℹ️ Esta cuenta no tiene protector de equidad instalado o no está exportando datos.
+                </div>`;
+            }
+            
+            document.getElementById('modalAccountContent').innerHTML = html;
+            document.getElementById('accountModal').classList.add('active');
+        }
+
+        function generateProtectionPanel(prot, account, stats) {
+            const limits = prot.limits || {};
+            const status = prot.status;
+            const state = prot.state;
+            const lastAction = prot.last_action || {};
+            
+            let html = `<div class="protection-panel">
+                <div class="protection-header">
+                    <h3 style="font-size: 16px;">🛡️ Protector de Equidad</h3>
+                    <span style="font-weight: 600; color: ${status === 'blocked' ? '#ef4444' : '#10b981'};">
+                        ${status === 'blocked' ? '🔴 Bloqueado' : '🟢 Activo'}
+                    </span>
+                </div>
+                
+                <div style="margin-bottom: 15px; padding: 10px; background: #1a202c; border-radius: 8px;">
+                    <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Estado:</div>
+                    <div style="font-weight: 600;">${state}</div>
+                </div>
+                
+                <div class="protection-limits">`;
+            
+            // Daily Loss
+            if (limits.daily_loss_active) {
+                const pct = limits.daily_loss_current_pct || 0;
+                html += generateLimitItem('Pérdida Diaria', `${pct.toFixed(1)}%`, 100, pct);
+            }
+            
+            // Daily Profit
+            if (limits.daily_profit_active) {
+                const pct = limits.daily_profit_current_pct || 0;
+                html += generateLimitItem('Profit Diario', `${pct.toFixed(1)}%`, 100, pct);
+            }
+            
+            // MaxLoss
+            if (limits.maxloss_active) {
+                const pct = limits.maxloss_current_pct || 0;
+                html += generateLimitItem('MaxLoss Total', `${pct.toFixed(1)}%`, 100, pct);
+            }
+            
+            // Profit Target - Calcular correctamente basado en ganancia acumulada
+            if (limits.profit_target_active) {
+                const currentBalance = account.balance || 0;
+                
+                // Intentar obtener el balance inicial de diferentes fuentes
+                let initialBalance = account.initial_balance || account.start_balance || account.deposit;
+                
+                // Si no hay balance inicial, intentar calcularlo usando estadísticas
+                if (!initialBalance || initialBalance === currentBalance) {
+                    const historicalProfit = stats.total_profit || stats.net_profit || 0;
+                    initialBalance = currentBalance - historicalProfit;
+                    
+                    // Si aún es cero o negativo, usar el balance actual
+                    if (initialBalance <= 0) {
+                        initialBalance = currentBalance;
+                    }
+                }
+                
+                // Calcular ganancia acumulada
+                const accumulatedProfit = currentBalance - initialBalance;
+                
+                // Obtener el target en USD del protector
+                const targetUSD = limits.profit_target_limit_usd || 0;
+                
+                // Calcular el porcentaje: (ganancia acumulada / target) * 100
+                let pct = 0;
+                if (targetUSD > 0) {
+                    pct = (accumulatedProfit / targetUSD) * 100;
+                }
+                
+                html += generateLimitItem('Profit Target', `${pct.toFixed(1)}%`, 100, pct);
+            }
+            
+            html += `</div>`;
+            
+            // Last Action - Option 4: Smart auto-hide + manual clear button
+            if (lastAction.action && lastAction.action !== 'Ninguno') {
+                // Auto-hide logic: only show if NOT normal OR any limit is unsafe
+                const isNormal = state === 'NORMAL (monitoreando)';
+                const allLimitsSafe = (
+                    (limits.daily_loss_current_pct || 0) < 50 &&
+                    (limits.maxloss_current_pct || 0) < 50 &&
+                    (limits.daily_profit_current_pct || 0) < 50 &&
+                    (limits.profit_target_current_pct || 0) < 50
+                );
+                
+                // Show warning if: not normal state OR any limit is not safe
+                const shouldShowWarning = !isNormal || !allLimitsSafe;
+                
+                if (shouldShowWarning) {
+                    html += `<div id="lastActionWarning_${account.login}" style="margin-top: 15px; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; border-radius: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                            <div style="flex: 1;">
+                                <div style="font-size: 11px; color: #ef4444; margin-bottom: 4px;">ÚLTIMA ACCIÓN:</div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">${lastAction.action}</div>
+                                <div style="font-size: 12px; color: #94a3b8;">Razón: ${lastAction.reason}</div>
+                                <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">${lastAction.timestamp || ''}</div>
+                            </div>
+                            <button onclick="clearLastActionWarning(${account.login})" 
+                                    style="background: none; border: none; color: #ef4444; cursor: pointer; font-size: 18px; padding: 0; line-height: 1; transition: opacity 0.2s;" 
+                                    onmouseover="this.style.opacity='0.7'" 
+                                    onmouseout="this.style.opacity='1'"
+                                    title="Borrar advertencia">
+                                ❌
+                            </button>
+                        </div>
+                    </div>`;
+                }
+            }
+            
+            html += `</div>`;
+            return html;
+        }
+
+        function clearLastActionWarning(accountLogin) {
+            const warningElement = document.getElementById('lastActionWarning_' + accountLogin);
+            if (warningElement) {
+                warningElement.style.transition = 'opacity 0.3s, transform 0.3s';
+                warningElement.style.opacity = '0';
+                warningElement.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    warningElement.remove();
+                }, 300);
+            }
+        }
+
+        function generateLimitItem(name, value, limit, current) {
+            const pct = limit > 0 ? (current / limit * 100) : 0;
+            let colorClass = 'progress-safe';
+            if (pct >= 95) colorClass = 'progress-critical';
+            else if (pct >= 80) colorClass = 'progress-warning';
+            else if (pct >= 50) colorClass = 'progress-caution';
+            
+            return `
+                <div class="limit-item">
+                    <div class="limit-header">
+                        <span class="limit-name">${name}</span>
+                        <span class="limit-value">${value} / ${limit}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill ${colorClass}" style="width: ${Math.min(pct, 100)}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeAccountModal() {
+            document.getElementById('accountModal').classList.remove('active');
+        }
+
+        // Emergency commands
+        function confirmCloseAll(login, vps, port, ip) {
+            pendingCommand = { action: 'close_all', login, vps, port, ip };
+            document.getElementById('confirmTitle').textContent = '🛑 Cerrar Todos los Trades';
+            document.getElementById('confirmMessage').innerHTML = `
+                ¿Estás seguro que deseas <strong>cerrar TODOS los trades</strong> de la cuenta ${login}?<br><br>
+                VPS: ${vps}<br>
+                Esta acción es <strong>inmediata</strong> y no se puede deshacer.
+            `;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function confirmPauseEA(login, vps, port, ip) {
+            pendingCommand = { action: 'pause_ea', login, vps, port, ip };
+            document.getElementById('confirmTitle').textContent = '⏸️ Pausar EA';
+            document.getElementById('confirmMessage').innerHTML = `
+                ¿Pausar el EA de la cuenta ${login}?<br><br>
+                VPS: ${vps}<br>
+                El EA no abrirá nuevos trades hasta que lo reanudes.
+            `;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        function confirmResumeEA(login, vps, port, ip) {
+            pendingCommand = { action: 'resume_ea', login, vps, port, ip };
+            document.getElementById('confirmTitle').textContent = '▶️ Reanudar EA';
+            document.getElementById('confirmMessage').innerHTML = `
+                ¿Reanudar el EA de la cuenta ${login}?<br><br>
+                VPS: ${vps}<br>
+                El EA volverá a operar normalmente.
+            `;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+
+        async function executeConfirmedAction() {
+            if (!pendingCommand) return;
+            
+            // Si es comando global, delegar a executeGlobalCommand
+            if (pendingCommand.global) {
+                const action = pendingCommand.action;
+                closeConfirm();
+                await executeGlobalCommand(action);
+                return;
+            }
+            
+            const { action, login, vps, port, ip } = pendingCommand;
+            
+            try {
+                const response = await fetch(`http://${ip}:${port}/api/command/${action}/${login}`, {
+                    method: 'POST',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    alert(`✅ Comando enviado exitosamente a ${vps}`);
+                    refreshData();
+                } else {
+                    alert(`❌ Error al enviar comando: ${response.status}`);
+                }
+            } catch (error) {
+                alert(`❌ Error de conexión: ${error.message}`);
+            }
+            
+            closeConfirm();
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmModal').classList.remove('active');
+            pendingCommand = null;
+        }
+
+        // ========== EMERGENCIA GLOBAL ==========
+        
+        function updateEmergencyPanel() {
+            const panel = document.getElementById('emergencyGlobalPanel');
+            const scope = document.getElementById('emergencyGlobalScope');
+            
+            if (allAccountsData.length === 0) {
+                panel.style.display = 'none';
+                return;
+            }
+            
+            panel.style.display = 'block';
+            
+            // Contar VPS únicos
+            const vpsUnicos = new Set(allAccountsData.map(acc => acc.vps_name));
+            scope.textContent = `Aplica a: ${allAccountsData.length} cuenta${allAccountsData.length !== 1 ? 's' : ''} en ${vpsUnicos.size} VPS`;
+        }
+        
+        function buildGlobalScopeHTML() {
+            // Agrupar cuentas por VPS para mostrar en el modal
+            const byVPS = {};
+            allAccountsData.forEach(acc => {
+                const name = acc.vps_name || 'VPS desconocido';
+                if (!byVPS[name]) byVPS[name] = [];
+                byVPS[name].push((acc.account || {}).login || 'N/A');
+            });
+            
+            let html = '';
+            Object.keys(byVPS).forEach(vps => {
+                html += `<div style="margin-bottom: 6px; padding: 6px 10px; background: rgba(255,255,255,0.04); border-radius: 6px; font-size: 13px;">
+                    <strong style="color: #cbd5e0;">🖥️ ${vps}:</strong> 
+                    <span style="color: #94a3b8;">${byVPS[vps].map(l => '#' + l).join(', ')}</span>
+                </div>`;
+            });
+            
+            const totalCuentas = allAccountsData.length;
+            const totalVPS = Object.keys(byVPS).length;
+            
+            return { html, totalCuentas, totalVPS };
+        }
+        
+        function confirmGlobalCloseAll() {
+            const { html, totalCuentas, totalVPS } = buildGlobalScopeHTML();
+            pendingCommand = { action: 'close_all', global: true };
+            document.getElementById('confirmTitle').textContent = '🛑 Cerrar Todos los Trades — GLOBAL';
+            document.getElementById('confirmMessage').innerHTML = `
+                ¿Estás seguro que deseas <strong>cerrar TODOS los trades</strong> en todas las cuentas?<br><br>
+                ${html}
+                <div style="margin-top: 10px; padding: 10px; background: rgba(239,68,68,0.12); border-left: 3px solid #ef4444; border-radius: 4px; font-size: 13px;">
+                    <strong style="color: #ef4444;">${totalCuentas} cuenta${totalCuentas !== 1 ? 's' : ''} en ${totalVPS} VPS.</strong> 
+                    Esta acción es <strong>inmediata</strong> y no se puede deshacer.
+                </div>
+            `;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+        
+        function confirmGlobalPauseEA() {
+            const { html, totalCuentas, totalVPS } = buildGlobalScopeHTML();
+            pendingCommand = { action: 'pause_ea', global: true };
+            document.getElementById('confirmTitle').textContent = '⏸️ Pausar EA — GLOBAL';
+            document.getElementById('confirmMessage').innerHTML = `
+                ¿Pausar el EA en <strong>todas</strong> las cuentas?<br><br>
+                ${html}
+                <div style="margin-top: 10px; padding: 10px; background: rgba(245,158,11,0.12); border-left: 3px solid #f59e0b; border-radius: 4px; font-size: 13px;">
+                    <strong style="color: #f59e0b;">${totalCuentas} cuenta${totalCuentas !== 1 ? 's' : ''} en ${totalVPS} VPS.</strong> 
+                    Los EA no abrirán nuevos trades hasta que los reanudes.
+                </div>
+            `;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+        
+        function confirmGlobalResumeEA() {
+            const { html, totalCuentas, totalVPS } = buildGlobalScopeHTML();
+            pendingCommand = { action: 'resume_ea', global: true };
+            document.getElementById('confirmTitle').textContent = '▶️ Reanudar EA — GLOBAL';
+            document.getElementById('confirmMessage').innerHTML = `
+                ¿Reanudar el EA en <strong>todas</strong> las cuentas?<br><br>
+                ${html}
+                <div style="margin-top: 10px; padding: 10px; background: rgba(16,185,129,0.12); border-left: 3px solid #10b981; border-radius: 4px; font-size: 13px;">
+                    <strong style="color: #10b981;">${totalCuentas} cuenta${totalCuentas !== 1 ? 's' : ''} en ${totalVPS} VPS.</strong> 
+                    Los EA volverán a operar normalmente.
+                </div>
+            `;
+            document.getElementById('confirmModal').classList.add('active');
+        }
+        
+        async function executeGlobalCommand(action) {
+            const promises = allAccountsData.map(acc => {
+                const login = (acc.account || {}).login;
+                const ip = acc.vps_ip;
+                const port = acc.vps_port;
+                const vpsName = acc.vps_name;
+                
+                return fetch(`http://${ip}:${port}/api/command/${action}/${login}`, {
+                    method: 'POST',
+                    mode: 'cors'
+                })
+                .then(response => ({
+                    login: login,
+                    vps: vpsName,
+                    success: response.ok,
+                    status: response.status
+                }))
+                .catch(error => ({
+                    login: login,
+                    vps: vpsName,
+                    success: false,
+                    error: error.message
+                }));
+            });
+            
+            const results = await Promise.allSettled(promises);
+            
+            // Procesar resultados
+            let exitosos = [];
+            let fallidos = [];
+            
+            results.forEach(result => {
+                if (result.status === 'fulfilled') {
+                    const r = result.value;
+                    if (r.success) {
+                        exitosos.push(r);
+                    } else {
+                        fallidos.push(r);
+                    }
+                } else {
+                    fallidos.push({ vps: 'Desconocido', login: '?', error: result.reason });
+                }
+            });
+            
+            // Construir reporte
+            let msg = '';
+            if (exitosos.length > 0) {
+                msg += `✅ <strong>${exitosos.length} cuenta${exitosos.length !== 1 ? 's' : ''}</strong> ejecutadas exitosamente`;
+                if (exitosos.length <= 6) {
+                    msg += ':<br>' + exitosos.map(e => `&nbsp;&nbsp;• #${e.login} (${e.vps})`).join('<br>');
+                }
+            }
+            if (fallidos.length > 0) {
+                if (msg) msg += '<br><br>';
+                msg += `❌ <strong>${fallidos.length} cuenta${fallidos.length !== 1 ? 's' : ''}</strong> con error:<br>` + 
+                       fallidos.map(f => `&nbsp;&nbsp;• #${f.login} (${f.vps}) — ${f.error || 'Error ' + f.status}`).join('<br>');
+            }
+            
+            alert(msg || '⚠️ No se procesaron cuentas.');
+            refreshData();
+        }
+
+        // Settings
+        function openSettings() {
+            document.getElementById('settingsModal').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').classList.remove('active');
+        }
+
+        // Auto refresh every 1 second
+        function startAutoRefresh() {
+            if (refreshIntervalId) {
+                clearInterval(refreshIntervalId);
+            }
+            
+            refreshIntervalId = setInterval(() => {
+                if (vpsServers.length > 0) {
+                    refreshData();
+                }
+            }, 1000);
+        }
+
+        // Close modals on outside click
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('active');
+            }
+        }
+
+        // Initialize
+        loadVPSServers();
+        refreshData();
+        startAutoRefresh();
+    </script>
+</body>
+</html>
