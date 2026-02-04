@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MT5 Multi-Account Monitor v3.7</title>
+    <title>MT5 Multi-Account Monitor v3.8</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -812,7 +812,7 @@
         <div class="header">
             <div class="header-title">
                 <h1>📊 MT5 Multi-Account Monitor</h1>
-                <span class="version-badge">v3.7</span>
+                <span class="version-badge">v3.8</span>
             </div>
             <div class="header-controls">
                 <div class="header-buttons">
@@ -1846,11 +1846,12 @@
             let filename = '';
             let title = '';
             
+            // V3.8: Nombres fijos sin versión - permite actualizaciones sin modificar código
             if (type === 'optimizer') {
-                filename = 'file:///C:/Users/PC/Documents/MT5-Monitor/mt5-optimizer-pro-v4.2.html';
+                filename = 'file:///C:/Users/PC/Documents/MT5-Monitor/mt5-optimizer-pro.html';
                 title = 'MT5 Optimizer Pro';
             } else if (type === 'analyzer') {
-                filename = 'file:///C:/Users/PC/Documents/MT5-Monitor/mt5-deep-analyzer-v1_5.html';
+                filename = 'file:///C:/Users/PC/Documents/MT5-Monitor/mt5-deep-analyzer.html';
                 title = 'MT5 Deep Analyzer';
             }
             
@@ -1867,7 +1868,7 @@
                 document.body.removeChild(link);
                 
             } catch (error) {
-                alert('⚠️ Error al abrir el sistema: ' + error.message + '\n\nAsegúrate de tener los archivos HTML en la siguiente ubicación:\n   C:\\Users\\PC\\Documents\\MT5-Monitor\\\n\n   • mt5-monitor-v3_3.html\n   • mt5-optimizer-pro-v4.2.html\n   • mt5-deep-analyzer-v1_5.html');
+                alert('⚠️ Error al abrir el sistema: ' + error.message + '\n\nAsegúrate de tener los archivos HTML en la siguiente ubicación:\n   C:\\Users\\PC\\Documents\\MT5-Monitor\\\n\n   • mt5-monitor-v3_8.html\n   • mt5-optimizer-pro.html (sin número de versión)\n   • mt5-deep-analyzer.html (sin número de versión)');
             }
         }
 
