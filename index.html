@@ -1,9 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
+<!--
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                   MT5 MONITOR v3.8 - VERSIÓN IPAD                         ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+📱 CONFIGURACIÓN PARA IPAD - Cambios realizados:
+
+✅ 1. BACKEND_URL cambiado a Tailscale IP:
+   - Antes: http://localhost:5001
+   - Ahora: http://100.115.202.122:8765
+   
+⚠️  IMPORTANTE: Si tu IP de Tailscale es diferente, cámbiala en la línea 1033
+   
+📋 REQUISITOS PARA QUE FUNCIONE:
+   ✓ Tailscale instalado y ACTIVO en PC e iPad
+   ✓ PC encendida con el backend Python corriendo (puerto 8765)
+   ✓ Ambos dispositivos conectados con la MISMA cuenta de Tailscale
+   
+🔧 SI NO FUNCIONA:
+   1. Verifica que el backend Python esté corriendo en tu PC
+   2. Verifica que Tailscale esté activo (verde) en ambos dispositivos
+   3. Verifica que la IP de Tailscale sea correcta (línea 1033)
+   4. Los VPS se configuran desde el menú ⚙️ Configuración en el monitor
+   
+📅 Versión iPad creada: Febrero 2026
+-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MT5 Multi-Account Monitor v3.8</title>
+    <title>MT5 Multi-Account Monitor v3.8 iPad</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -804,6 +830,56 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        /* iPad Specific Optimizations */
+        @media (min-width: 768px) and (max-width: 1024px) {
+            /* Increase touch targets for iPad */
+            .btn {
+                min-height: 44px;
+                padding: 12px 20px;
+            }
+            
+            .account-card {
+                padding: 25px;
+            }
+            
+            /* Better spacing for touch */
+            .nav-button {
+                padding: 15px 25px;
+                font-size: 16px;
+            }
+            
+            /* Optimize modal for iPad */
+            .modal-content {
+                max-width: 90%;
+                margin: 5% auto;
+            }
+        }
+        
+        /* Improve touch experience on all mobile devices */
+        @media (hover: none) and (pointer: coarse) {
+            /* Disable hover effects on touch devices */
+            .account-card:hover {
+                transform: none;
+            }
+            
+            /* Add active state instead */
+            .account-card:active {
+                transform: scale(0.98);
+                opacity: 0.9;
+            }
+            
+            .btn:active {
+                transform: scale(0.95);
+            }
+            
+            /* Prevent text selection on buttons */
+            .btn, .nav-button, .close-modal {
+                -webkit-user-select: none;
+                user-select: none;
+                -webkit-tap-highlight-color: transparent;
+            }
+        }
     </style>
 </head>
 <body>
@@ -812,7 +888,7 @@
         <div class="header">
             <div class="header-title">
                 <h1>📊 MT5 Multi-Account Monitor</h1>
-                <span class="version-badge">v3.8</span>
+                <span class="version-badge">v3.8 iPad</span>
             </div>
             <div class="header-controls">
                 <div class="header-buttons">
@@ -1030,7 +1106,7 @@
         let journalData = {}; // {login: {closed_trades: [], total_count: 0}}
         let historicalSnapshots = []; // Array con snapshots históricos
         let currentAnalysisData = null; // Datos del análisis actual
-        const BACKEND_URL = 'http://100.115.202.122:5001'; // Backend Python
+        const BACKEND_URL = 'http://100.115.202.122:8765'; // Backend Python via Tailscale
         let calendarData = {}; // {login: {daily_stats: []}}
 
         // Load VPS servers from localStorage
@@ -1039,9 +1115,9 @@
             if (saved) {
                 vpsServers = JSON.parse(saved);
             } else {
-                // Default example
+                // Default example - Configura tus VPS desde el menú ⚙️
                 vpsServers = [
-                    { name: 'VPS-1', ip: 'localhost', port: 8080 }
+                    { name: 'VPS-Ejemplo', ip: '0.0.0.0', port: 8001 }
                 ];
                 saveVPSServers();
             }
